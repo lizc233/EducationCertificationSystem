@@ -10,4 +10,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface NoticeMessageService extends IService<NoticeMessage> {
 
+    public long count();
 }
