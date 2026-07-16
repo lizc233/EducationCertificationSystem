@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.mapper.AiAnalysisResultMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.AiAnalysisResult">
+            <id property="id" column="id" />
+            <result property="requestId" column="request_id" />
+            <result property="resultType" column="result_type" />
+            <result property="resultText" column="result_text" />
+            <result property="resultJson" column="result_json" />
+            <result property="confidenceScore" column="confidence_score" />
+            <result property="humanConfirmedFlag" column="human_confirmed_flag" />
+            <result property="confirmedBy" column="confirmed_by" />
+            <result property="confirmedAt" column="confirmed_at" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,request_id,result_type,result_text,result_json,confidence_score,
+        human_confirmed_flag,confirmed_by,confirmed_at,created_at,updated_at,
+        is_deleted,remark
+    </sql>
+</mapper>

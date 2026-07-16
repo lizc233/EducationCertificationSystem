@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.mapper.NoticeRecipientMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.NoticeRecipient">
+            <id property="id" column="id" />
+            <result property="noticeId" column="notice_id" />
+            <result property="recipientUserId" column="recipient_user_id" />
+            <result property="readStatus" column="read_status" />
+            <result property="readAt" column="read_at" />
+            <result property="deletedFlag" column="deleted_flag" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,notice_id,recipient_user_id,read_status,read_at,deleted_flag,
+        created_at,updated_at,is_deleted,remark
+    </sql>
+</mapper>

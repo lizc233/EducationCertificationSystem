@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.mapper.CourseEvidenceMaterialMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.CourseEvidenceMaterial">
+            <id property="id" column="id" />
+            <result property="taskId" column="task_id" />
+            <result property="methodId" column="method_id" />
+            <result property="materialType" column="material_type" />
+            <result property="fileId" column="file_id" />
+            <result property="sourceStudentId" column="source_student_id" />
+            <result property="reviewStatus" column="review_status" />
+            <result property="reviewUserId" column="review_user_id" />
+            <result property="reviewComment" column="review_comment" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,task_id,method_id,material_type,file_id,source_student_id,
+        review_status,review_user_id,review_comment,created_at,updated_at,
+        is_deleted,remark
+    </sql>
+</mapper>

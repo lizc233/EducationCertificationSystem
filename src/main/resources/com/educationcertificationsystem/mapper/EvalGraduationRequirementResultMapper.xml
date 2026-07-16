@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.mapper.EvalGraduationRequirementResultMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.EvalGraduationRequirementResult">
+            <id property="id" column="id" />
+            <result property="programVersionId" column="program_version_id" />
+            <result property="requirementId" column="requirement_id" />
+            <result property="modelId" column="model_id" />
+            <result property="attainmentRate" column="attainment_rate" />
+            <result property="attainmentValue" column="attainment_value" />
+            <result property="thresholdValue" column="threshold_value" />
+            <result property="warningFlag" column="warning_flag" />
+            <result property="calcTime" column="calc_time" />
+            <result property="lockFlag" column="lock_flag" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,program_version_id,requirement_id,model_id,attainment_rate,attainment_value,
+        threshold_value,warning_flag,calc_time,lock_flag,created_at,
+        updated_at,is_deleted,remark
+    </sql>
+</mapper>

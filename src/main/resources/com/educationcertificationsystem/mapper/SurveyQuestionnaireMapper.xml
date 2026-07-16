@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.mapper.SurveyQuestionnaireMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.SurveyQuestionnaire">
+            <id property="id" column="id" />
+            <result property="questionnaireCode" column="questionnaire_code" />
+            <result property="title" column="title" />
+            <result property="subtitle" column="subtitle" />
+            <result property="questionnaireType" column="questionnaire_type" />
+            <result property="targetObjectType" column="target_object_type" />
+            <result property="targetObjectId" column="target_object_id" />
+            <result property="anonymousFlag" column="anonymous_flag" />
+            <result property="publishStatus" column="publish_status" />
+            <result property="startTime" column="start_time" />
+            <result property="endTime" column="end_time" />
+            <result property="mqStatus" column="mq_status" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,questionnaire_code,title,subtitle,questionnaire_type,target_object_type,
+        target_object_id,anonymous_flag,publish_status,start_time,end_time,
+        mq_status,created_at,updated_at,is_deleted,remark
+    </sql>
+</mapper>

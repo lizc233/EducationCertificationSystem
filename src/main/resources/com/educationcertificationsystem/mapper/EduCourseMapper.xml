@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.mapper.EduCourseMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.EduCourse">
+            <id property="id" column="id" />
+            <result property="courseCode" column="course_code" />
+            <result property="courseName" column="course_name" />
+            <result property="courseType" column="course_type" />
+            <result property="credit" column="credit" />
+            <result property="totalHours" column="total_hours" />
+            <result property="theoryHours" column="theory_hours" />
+            <result property="practiceHours" column="practice_hours" />
+            <result property="offeringUnitId" column="offering_unit_id" />
+            <result property="status" column="status" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,course_code,course_name,course_type,credit,total_hours,
+        theory_hours,practice_hours,offering_unit_id,status,created_at,
+        updated_at,is_deleted,remark
+    </sql>
+</mapper>

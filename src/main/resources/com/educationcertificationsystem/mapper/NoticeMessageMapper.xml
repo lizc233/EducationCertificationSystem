@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.mapper.NoticeMessageMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.NoticeMessage">
+            <id property="id" column="id" />
+            <result property="noticeType" column="notice_type" />
+            <result property="title" column="title" />
+            <result property="content" column="content" />
+            <result property="senderUserId" column="sender_user_id" />
+            <result property="bizType" column="biz_type" />
+            <result property="bizId" column="biz_id" />
+            <result property="channelType" column="channel_type" />
+            <result property="priorityLevel" column="priority_level" />
+            <result property="publishStatus" column="publish_status" />
+            <result property="sendAt" column="send_at" />
+            <result property="expireAt" column="expire_at" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,notice_type,title,content,sender_user_id,biz_type,
+        biz_id,channel_type,priority_level,publish_status,send_at,
+        expire_at,created_at,updated_at,is_deleted,remark
+    </sql>
+</mapper>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.mapper.EduCourseContentObjectiveRelMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.EduCourseContentObjectiveRel">
+            <id property="id" column="id" />
+            <result property="contentId" column="content_id" />
+            <result property="objectiveId" column="objective_id" />
+            <result property="supportStrength" column="support_strength" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,content_id,objective_id,support_strength,created_at,updated_at,
+        is_deleted,remark
+    </sql>
+</mapper>

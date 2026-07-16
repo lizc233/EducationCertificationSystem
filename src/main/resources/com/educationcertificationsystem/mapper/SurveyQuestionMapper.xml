@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.mapper.SurveyQuestionMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.SurveyQuestion">
+            <id property="id" column="id" />
+            <result property="questionnaireId" column="questionnaire_id" />
+            <result property="questionCode" column="question_code" />
+            <result property="questionText" column="question_text" />
+            <result property="questionType" column="question_type" />
+            <result property="isRequired" column="is_required" />
+            <result property="sortNo" column="sort_no" />
+            <result property="minSelect" column="min_select" />
+            <result property="maxSelect" column="max_select" />
+            <result property="scoreWeight" column="score_weight" />
+            <result property="matrixType" column="matrix_type" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,questionnaire_id,question_code,question_text,question_type,is_required,
+        sort_no,min_select,max_select,score_weight,matrix_type,
+        created_at,updated_at,is_deleted,remark
+    </sql>
+</mapper>

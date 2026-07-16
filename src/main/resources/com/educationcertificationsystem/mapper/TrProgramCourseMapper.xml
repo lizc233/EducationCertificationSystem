@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.mapper.TrProgramCourseMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.TrProgramCourse">
+            <id property="id" column="id" />
+            <result property="programVersionId" column="program_version_id" />
+            <result property="courseId" column="course_id" />
+            <result property="semesterRecommend" column="semester_recommend" />
+            <result property="courseCategory" column="course_category" />
+            <result property="isRequired" column="is_required" />
+            <result property="sortNo" column="sort_no" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,program_version_id,course_id,semester_recommend,course_category,is_required,
+        sort_no,created_at,updated_at,is_deleted,remark
+    </sql>
+</mapper>

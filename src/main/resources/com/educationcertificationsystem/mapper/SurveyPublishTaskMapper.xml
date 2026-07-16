@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.mapper.SurveyPublishTaskMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.SurveyPublishTask">
+            <id property="id" column="id" />
+            <result property="questionnaireId" column="questionnaire_id" />
+            <result property="publishBatchNo" column="publish_batch_no" />
+            <result property="publishStatus" column="publish_status" />
+            <result property="mqStatus" column="mq_status" />
+            <result property="retryCount" column="retry_count" />
+            <result property="publishedAt" column="published_at" />
+            <result property="revokedAt" column="revoked_at" />
+            <result property="errorMessage" column="error_message" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,questionnaire_id,publish_batch_no,publish_status,mq_status,retry_count,
+        published_at,revoked_at,error_message,created_at,updated_at,
+        is_deleted,remark
+    </sql>
+</mapper>

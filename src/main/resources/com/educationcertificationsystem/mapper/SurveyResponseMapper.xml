@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.mapper.SurveyResponseMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.SurveyResponse">
+            <id property="id" column="id" />
+            <result property="questionnaireId" column="questionnaire_id" />
+            <result property="respondentUserId" column="respondent_user_id" />
+            <result property="respondentName" column="respondent_name" />
+            <result property="respondentType" column="respondent_type" />
+            <result property="responseToken" column="response_token" />
+            <result property="submitStatus" column="submit_status" />
+            <result property="submittedAt" column="submitted_at" />
+            <result property="ipAddress" column="ip_address" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,questionnaire_id,respondent_user_id,respondent_name,respondent_type,response_token,
+        submit_status,submitted_at,ip_address,created_at,updated_at,
+        is_deleted,remark
+    </sql>
+</mapper>

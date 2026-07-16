@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.mapper.EduStudentMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.EduStudent">
+            <id property="id" column="id" />
+            <result property="userId" column="user_id" />
+            <result property="studentNo" column="student_no" />
+            <result property="classId" column="class_id" />
+            <result property="admissionYear" column="admission_year" />
+            <result property="gender" column="gender" />
+            <result property="status" column="status" />
+            <result property="graduationStatus" column="graduation_status" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,student_no,class_id,admission_year,gender,
+        status,graduation_status,created_at,updated_at,is_deleted,
+        remark
+    </sql>
+</mapper>
