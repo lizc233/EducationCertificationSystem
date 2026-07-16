@@ -13,3 +13,7 @@ spring:
     baseline-on-migrate: true
     baseline-version: 0
     clean-disabled: true
+mybatis-plus:
+  mapper-locations: classpath*:com/educationcertificationsystem/mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true

@@ -18,3 +18,8 @@ spring:
     baseline-version: 0
     # 3. 严格校验：如果有人改了旧的本地 SQL 文件导致 Checksum 不匹配，直接报错拒绝启动
     validate-on-migrate: true
+
+mybatis-plus:
+  mapper-locations: classpath*:com/educationcertificationsystem/mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
