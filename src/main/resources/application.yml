@@ -1,0 +1,20 @@
+spring:
+  docker:
+    compose:
+      enabled: false
+  profiles:
+    # 激活 dev 环境，这样程序启动时会自动读取 application-dev.yml 的配置[cite: 2]
+    active: dev
+  datasource:
+    url: jdbc:mysql://localhost:3306/your_db
+    username: root
+    password: your_password
+  flyway:
+    # 1. 声明 SQL 脚本存放的契约路径
+    locations: classpath:db/migration
+    # 2. 核心安全防御：如果数据库里已经有手动建的表，且 flyway_schema_history 表还不存在，
+    # 开启 baseline-on-migrate 可以防止报错，自动进行基线对账。
+    baseline-on-migrate: true
+    baseline-version: 0
+    # 3. 严格校验：如果有人改了旧的本地 SQL 文件导致 Checksum 不匹配，直接报错拒绝启动
+    validate-on-migrate: true

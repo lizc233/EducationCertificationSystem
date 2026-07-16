@@ -1,0 +1,19 @@
+spring:
+  docker:
+    compose:
+      enabled: false
+  datasource:
+    # 驱动程序
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 数据库连接：连接你 DDL 里的 education_certification_system 库
+    url: jdbc:mysql://localhost:3306/education_certification_system?useSSL=false&serverTimezone=UTC&characterEncoding=utf-8&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    # 你的本地 MySQL 账号（根据实际情况修改）
+    username: root
+    # 你的本地 MySQL 密码（根据实际情况修改）
+    password: Lizc20041020
+
+  flyway:
+    # 开发环境允许 Flyway 运行
+    enabled: true
+    # 开启开发环境特有的安全保障
+    clean-disabled: true
