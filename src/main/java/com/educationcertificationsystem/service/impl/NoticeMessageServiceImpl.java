@@ -15,6 +15,10 @@ import org.springframework.stereotype.Service;
 public class NoticeMessageServiceImpl extends ServiceImpl<NoticeMessageMapper, NoticeMessage>
     implements NoticeMessageService{
 
+    @Override
+    public long count() {
+        return 0;
+    }
 }
 
 
