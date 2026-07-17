@@ -4,11 +4,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.educationcertificationsystem.constant.NoticeMqConstants;
 import com.educationcertificationsystem.model.dto.notice.NoticePublishEvent;
+import com.educationcertificationsystem.model.dto.notice.NoticeSendRequest;
 import com.educationcertificationsystem.model.entity.NoticeMessage;
+import com.educationcertificationsystem.model.entity.NoticeRecipient;
 import com.educationcertificationsystem.model.entity.SysUser;
 import com.educationcertificationsystem.notice.mapper.NoticeMessageMapper;
 import com.educationcertificationsystem.notice.service.NoticeMessageService;
 import com.educationcertificationsystem.notice.service.NoticePushLogService;
+import com.educationcertificationsystem.notice.service.NoticeRecipientService;
 import com.educationcertificationsystem.user.service.SysUserService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -30,6 +33,7 @@ public class NoticeMessageServiceImpl extends ServiceImpl<NoticeMessageMapper, N
 
     private final RabbitTemplate rabbitTemplate;
     private final NoticePushLogService noticePushLogService;
+    private final NoticeRecipientService noticeRecipientService;
     private final SysUserService sysUserService;
 
     @Override
@@ -68,11 +72,7 @@ public class NoticeMessageServiceImpl extends ServiceImpl<NoticeMessageMapper, N
     @Override
     @Transactional
     public NoticeMessage publishNotice(Long noticeId, List<Long> recipientUserIds, Long operatorUserId, String remark) {
-        NoticeMessage noticeMessage = getActiveById(noticeId);
-        if (noticeMessage == null) {
-            throw new IllegalArgumentException("通知消息不存在");
-        }
-
+        NoticeMessage noticeMessage = getRequiredNotice(noticeId);
         List<Long> uniqueRecipientIds = normalizeRecipientIds(recipientUserIds);
         if (uniqueRecipientIds.isEmpty()) {
             throw new IllegalArgumentException("通知接收人不能为空");
@@ -85,16 +85,101 @@ public class NoticeMessageServiceImpl extends ServiceImpl<NoticeMessageMapper, N
             throw new IllegalStateException("通知已经发布或正在发布");
         }
 
+        return dispatchNotice(noticeMessage, uniqueRecipientIds, operatorUserId, remark, false);
+    }
+
+    @Override
+    @Transactional
+    public NoticeMessage retryPublish(Long noticeId, List<Long> recipientUserIds, Long operatorUserId, String remark) {
+        NoticeMessage noticeMessage = getRequiredNotice(noticeId);
+        if (NoticeMqConstants.NOTICE_STATUS_PUBLISHING.equals(noticeMessage.getPublishStatus())) {
+            throw new IllegalStateException("通知正在发布，无法重试");
+        }
+
+        List<Long> resolvedRecipientIds = normalizeRecipientIds(recipientUserIds);
+        if (resolvedRecipientIds.isEmpty()) {
+            List<NoticeRecipient> recipients = noticeRecipientService.listByCondition(noticeId, null, null);
+            for (NoticeRecipient recipient : recipients) {
+                if (recipient.getRecipientUserId() != null) {
+                    resolvedRecipientIds.add(recipient.getRecipientUserId());
+                }
+            }
+        }
+        if (resolvedRecipientIds.isEmpty()) {
+            throw new IllegalArgumentException("缺少可重试的接收人，请重新指定");
+        }
+        validateRecipients(resolvedRecipientIds);
+        return dispatchNotice(noticeMessage, resolvedRecipientIds, operatorUserId, remark, true);
+    }
+
+    @Override
+    @Transactional
+    public NoticeMessage sendNotice(NoticeSendRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("请求体不能为空");
+        }
+        if (request.getSenderUserId() != null) {
+            SysUser sender = sysUserService.getById(request.getSenderUserId());
+            if (sender == null || (sender.getIsDeleted() != null && sender.getIsDeleted() != 0)) {
+                throw new IllegalArgumentException("发送人不存在");
+            }
+        }
+
+        NoticeMessage entity = new NoticeMessage();
+        entity.setNoticeType(request.getNoticeType());
+        entity.setTitle(request.getTitle());
+        entity.setContent(request.getContent());
+        entity.setSenderUserId(request.getSenderUserId());
+        entity.setBizType(request.getBizType());
+        entity.setBizId(request.getBizId());
+        entity.setChannelType(request.getChannelType());
+        entity.setPriorityLevel(request.getPriorityLevel() == null ? 0 : request.getPriorityLevel());
+        entity.setPublishStatus(NoticeMqConstants.NOTICE_STATUS_DRAFT);
+        entity.setSendAt(request.getSendAt());
+        entity.setExpireAt(request.getExpireAt());
+        entity.setIsDeleted(0);
+        entity.setRemark(request.getRemark());
+        save(entity);
+
+        return publishNotice(entity.getId(), request.getRecipientUserIds(), request.getOperatorUserId(), request.getRemark());
+    }
+
+    @Override
+    public void updatePublishStatus(Long noticeId, String publishStatus) {
+        NoticeMessage noticeMessage = baseMapper.selectById(noticeId);
+        if (noticeMessage == null) {
+            return;
+        }
+        noticeMessage.setPublishStatus(publishStatus);
+        updateById(noticeMessage);
+    }
+
+    private NoticeMessage getRequiredNotice(Long noticeId) {
+        NoticeMessage noticeMessage = getActiveById(noticeId);
+        if (noticeMessage == null) {
+            throw new IllegalArgumentException("通知消息不存在");
+        }
+        return noticeMessage;
+    }
+
+    private NoticeMessage dispatchNotice(NoticeMessage noticeMessage, List<Long> recipientUserIds, Long operatorUserId,
+                                         String remark, boolean retry) {
+        Long noticeId = noticeMessage.getId();
         noticeMessage.setPublishStatus(NoticeMqConstants.NOTICE_STATUS_PUBLISHING);
         noticeMessage.setSendAt(LocalDateTime.now());
         updateById(noticeMessage);
 
-        noticePushLogService.createPendingLog(noticeId, NoticeMqConstants.NOTICE_EXCHANGE,
-                NoticeMqConstants.NOTICE_ROUTING_KEY, remark);
+        if (retry) {
+            noticePushLogService.createRetryLog(noticeId, NoticeMqConstants.NOTICE_EXCHANGE,
+                    NoticeMqConstants.NOTICE_ROUTING_KEY, remark);
+        } else {
+            noticePushLogService.createPendingLog(noticeId, NoticeMqConstants.NOTICE_EXCHANGE,
+                    NoticeMqConstants.NOTICE_ROUTING_KEY, remark);
+        }
 
         NoticePublishEvent event = new NoticePublishEvent(
                 noticeId,
-                uniqueRecipientIds,
+                recipientUserIds,
                 operatorUserId,
                 remark,
                 LocalDateTime.now());
@@ -120,18 +205,7 @@ public class NoticeMessageServiceImpl extends ServiceImpl<NoticeMessageMapper, N
                 }
             }
         });
-
         return noticeMessage;
-    }
-
-    @Override
-    public void updatePublishStatus(Long noticeId, String publishStatus) {
-        NoticeMessage noticeMessage = baseMapper.selectById(noticeId);
-        if (noticeMessage == null) {
-            return;
-        }
-        noticeMessage.setPublishStatus(publishStatus);
-        updateById(noticeMessage);
     }
 
     private List<Long> normalizeRecipientIds(List<Long> recipientUserIds) {

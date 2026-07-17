@@ -6,6 +6,7 @@ import com.educationcertificationsystem.common.Result;
 import com.educationcertificationsystem.model.entity.NoticeMessage;
 import com.educationcertificationsystem.model.entity.NoticeRecipient;
 import com.educationcertificationsystem.model.entity.SysUser;
+import com.educationcertificationsystem.model.vo.notice.NoticeInboxItem;
 import com.educationcertificationsystem.notice.service.NoticeMessageService;
 import com.educationcertificationsystem.notice.service.NoticeRecipientService;
 import com.educationcertificationsystem.user.service.SysUserService;
@@ -50,7 +51,7 @@ public class NoticeRecipientController {
                 .eq(NoticeRecipient::getRecipientUserId, request.getRecipientUserId())
                 .last("LIMIT 1"), false);
         if (existing != null && isActive(existing)) {
-            return Result.error("该通知接收人记录已存在");
+            return Result.error("该通知接收记录已存在");
         }
 
         NoticeRecipient entity = existing != null ? existing : new NoticeRecipient();
@@ -75,7 +76,7 @@ public class NoticeRecipientController {
     public Result<NoticeRecipient> getById(@PathVariable Long id) {
         NoticeRecipient entity = getActiveById(id);
         if (entity == null) {
-            return Result.error("通知接收人记录不存在");
+            return Result.error("通知接收记录不存在");
         }
         return Result.success(entity);
     }
@@ -108,13 +109,26 @@ public class NoticeRecipientController {
         return Result.success(page);
     }
 
+    @GetMapping("/inbox")
+    @Operation(summary = "查询通知收件箱")
+    public Result<Page<NoticeInboxItem>> inbox(
+            @RequestParam Long recipientUserId,
+            @RequestParam(defaultValue = "1") long pageNum,
+            @RequestParam(defaultValue = "10") long pageSize,
+            @RequestParam(required = false) Integer readStatus,
+            @RequestParam(required = false) String noticeType,
+            @RequestParam(required = false) String title) {
+        return Result.success(noticeRecipientService.pageInbox(
+                pageNum, pageSize, recipientUserId, readStatus, noticeType, title));
+    }
+
     @PutMapping("/{id}")
     @Operation(summary = "更新通知接收记录")
     @Transactional
     public Result<NoticeRecipient> update(@PathVariable Long id, @RequestBody NoticeRecipient request) {
         NoticeRecipient entity = getActiveById(id);
         if (entity == null) {
-            return Result.error("通知接收人记录不存在");
+            return Result.error("通知接收记录不存在");
         }
         String error = validateForCreate(request);
         if (error != null) {
@@ -153,7 +167,7 @@ public class NoticeRecipientController {
     public Result<NoticeRecipient> markAsRead(@PathVariable Long id) {
         NoticeRecipient entity = getActiveById(id);
         if (entity == null) {
-            return Result.error("通知接收人记录不存在");
+            return Result.error("通知接收记录不存在");
         }
         entity.setReadStatus(1);
         entity.setReadAt(LocalDateTime.now());
@@ -161,13 +175,17 @@ public class NoticeRecipientController {
         return Result.success(entity);
     }
 
+    @PutMapping("/read-all")
+    @Operation(summary = "标记全部通知已读")
+    @Transactional
+    public Result<Integer> markAllRead(@RequestParam Long recipientUserId) {
+        return Result.success(noticeRecipientService.markAllRead(recipientUserId));
+    }
+
     @GetMapping("/unread-count")
     @Operation(summary = "查询未读数量")
     public Result<Long> unreadCount(@RequestParam Long recipientUserId) {
-        long count = noticeRecipientService.count(baseWrapper()
-                .eq(NoticeRecipient::getRecipientUserId, recipientUserId)
-                .eq(NoticeRecipient::getReadStatus, 0));
-        return Result.success(count);
+        return Result.success(noticeRecipientService.countUnread(recipientUserId));
     }
 
     @DeleteMapping("/{id}")
@@ -176,7 +194,7 @@ public class NoticeRecipientController {
     public Result<String> delete(@PathVariable Long id) {
         NoticeRecipient entity = getActiveById(id);
         if (entity == null) {
-            return Result.error("通知接收人记录不存在");
+            return Result.error("通知接收记录不存在");
         }
         entity.setDeletedFlag(1);
         entity.setIsDeleted(1);

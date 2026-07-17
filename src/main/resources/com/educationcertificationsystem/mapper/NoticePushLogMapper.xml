@@ -5,19 +5,19 @@
 <mapper namespace="com.educationcertificationsystem.notice.mapper.NoticePushLogMapper">
 
     <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.NoticePushLog">
-            <id property="id" column="id" />
-            <result property="noticeId" column="notice_id" />
-            <result property="mqTopic" column="mq_topic" />
-            <result property="mqKey" column="mq_key" />
-            <result property="retryCount" column="retry_count" />
-            <result property="sendStatus" column="send_status" />
-            <result property="errorMessage" column="error_message" />
-            <result property="sentAt" column="sent_at" />
-            <result property="ackedAt" column="acked_at" />
-            <result property="createdAt" column="created_at" />
-            <result property="updatedAt" column="updated_at" />
-            <result property="isDeleted" column="is_deleted" />
-            <result property="remark" column="remark" />
+        <id property="id" column="id" />
+        <result property="noticeId" column="notice_id" />
+        <result property="mqTopic" column="mq_topic" />
+        <result property="mqKey" column="mq_key" />
+        <result property="retryCount" column="retry_count" />
+        <result property="sendStatus" column="send_status" />
+        <result property="errorMessage" column="error_message" />
+        <result property="sentAt" column="sent_at" />
+        <result property="ackedAt" column="acked_at" />
+        <result property="createdAt" column="created_at" />
+        <result property="updatedAt" column="updated_at" />
+        <result property="isDeleted" column="is_deleted" />
+        <result property="remark" column="remark" />
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -68,5 +68,12 @@
           and is_deleted = 0
         order by id desc
         limit 1
+    </select>
+
+    <select id="selectMaxRetryCount" resultType="int">
+        select coalesce(max(retry_count), 0)
+        from notice_push_log
+        where notice_id = #{noticeId}
+          and is_deleted = 0
     </select>
 </mapper>

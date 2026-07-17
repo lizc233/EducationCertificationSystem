@@ -1,8 +1,9 @@
 package com.educationcertificationsystem.notice.service;
 
-import com.educationcertificationsystem.model.entity.NoticeRecipient;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.educationcertificationsystem.model.entity.NoticeRecipient;
+import com.educationcertificationsystem.model.vo.notice.NoticeInboxItem;
 import java.util.List;
 
 /**
@@ -30,6 +31,15 @@ public interface NoticeRecipientService extends IService<NoticeRecipient> {
                           Integer readStatus);
 
     long countUnread(Long recipientUserId);
+
+    Page<NoticeInboxItem> pageInbox(long pageNum,
+                                    long pageSize,
+                                    Long recipientUserId,
+                                    Integer readStatus,
+                                    String noticeType,
+                                    String title);
+
+    int markAllRead(Long recipientUserId);
 
     int batchCreateRecipients(Long noticeId, List<Long> recipientUserIds, String remark);
 }

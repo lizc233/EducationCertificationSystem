@@ -26,6 +26,8 @@ public interface NoticePushLogMapper extends BaseMapper<NoticePushLog> {
 
     NoticePushLog selectLatestByNoticeId(@Param("noticeId") Long noticeId);
 
+    int selectMaxRetryCount(@Param("noticeId") Long noticeId);
+
 }
 
 

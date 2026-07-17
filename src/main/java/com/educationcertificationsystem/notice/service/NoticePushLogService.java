@@ -29,6 +29,8 @@ public interface NoticePushLogService extends IService<NoticePushLog> {
 
     NoticePushLog createPendingLog(Long noticeId, String mqTopic, String mqKey, String remark);
 
+    NoticePushLog createRetryLog(Long noticeId, String mqTopic, String mqKey, String remark);
+
     NoticePushLog findLatestByNoticeId(Long noticeId);
 
     NoticePushLog markSent(Long noticeId);
