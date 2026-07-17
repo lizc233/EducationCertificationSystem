@@ -53,6 +53,16 @@ public class TeachingController {
         return Result.success(teachingTaskService.page(new Page<>(page, size), wrapper));
     }
 
+    @GetMapping("/my-tasks")
+    public Result<Page<TeachingTask>> myTasks(@RequestParam Long teacherId,
+                                              @RequestParam(defaultValue = "1") long page,
+                                              @RequestParam(defaultValue = "10") long size,
+                                              @RequestParam(required = false) Long semesterId,
+                                              @RequestParam(required = false) String taskStatus,
+                                              @RequestParam(required = false) String keyword) {
+        return tasks(page, size, semesterId, null, null, teacherId, taskStatus, keyword);
+    }
+
     @GetMapping("/tasks/{id}")
     public Result<TeachingTask> task(@PathVariable Long id) {
         return Result.success(teachingTaskService.getById(id));
@@ -66,6 +76,8 @@ public class TeachingController {
         if (task.getTaskCode() == null || task.getTaskCode().isBlank()) {
             task.setTaskCode("TT-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 8));
         }
+        validateTaskCodeUnique(task.getTaskCode(), null);
+        validateTaskConflict(task, null);
         EntityAuditSupport.touchCreate(task);
         teachingTaskService.save(task);
         return Result.success(task);
@@ -77,8 +89,12 @@ public class TeachingController {
         if (current == null) {
             return Result.error("授课任务不存在");
         }
+        validateTaskCodeUnique(
+                task.getTaskCode() != null && !task.getTaskCode().isBlank() ? task.getTaskCode() : current.getTaskCode(),
+                current.getId());
         BeanUtil.copyProperties(task, current, CopyOptions.create().setIgnoreNullValue(true)
                 .setIgnoreProperties("id", "createdAt", "updatedAt", "isDeleted"));
+        validateTaskConflict(current, current.getId());
         EntityAuditSupport.touchUpdate(current);
         teachingTaskService.updateById(current);
         return Result.success(current);
@@ -110,5 +126,32 @@ public class TeachingController {
 
     private QueryWrapper<TeachingTask> activeWrapper() {
         return new QueryWrapper<TeachingTask>().and(w -> w.eq("is_deleted", 0).or().isNull("is_deleted"));
+    }
+
+    private void validateTaskCodeUnique(String taskCode, Long currentId) {
+        if (taskCode == null || taskCode.isBlank()) {
+            throw new IllegalArgumentException("授课任务编号不能为空");
+        }
+        long count = teachingTaskService.count(activeWrapper()
+                .eq("task_code", taskCode)
+                .ne(currentId != null, "id", currentId));
+        if (count > 0) {
+            throw new IllegalArgumentException("授课任务编号已存在");
+        }
+    }
+
+    private void validateTaskConflict(TeachingTask task, Long currentId) {
+        if (task.getSemesterId() == null || task.getCourseId() == null || task.getClassId() == null || task.getTeacherId() == null) {
+            return;
+        }
+        long count = teachingTaskService.count(activeWrapper()
+                .eq("semester_id", task.getSemesterId())
+                .eq("course_id", task.getCourseId())
+                .eq("class_id", task.getClassId())
+                .eq("teacher_id", task.getTeacherId())
+                .ne(currentId != null, "id", currentId));
+        if (count > 0) {
+            throw new IllegalArgumentException("同一学期下该教师、课程和班级的授课任务已存在");
+        }
     }
 }

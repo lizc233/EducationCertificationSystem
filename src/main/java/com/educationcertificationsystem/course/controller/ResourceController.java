@@ -5,14 +5,17 @@ import cn.hutool.core.bean.copier.CopyOptions;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.educationcertificationsystem.common.Result;
-import com.educationcertificationsystem.model.entity.CourseEvidenceMaterial;
-import com.educationcertificationsystem.model.entity.CourseResource;
-import com.educationcertificationsystem.model.entity.SysFile;
 import com.educationcertificationsystem.course.service.CourseEvidenceMaterialService;
 import com.educationcertificationsystem.course.service.CourseResourceService;
 import com.educationcertificationsystem.file.service.FileStorageService;
+import com.educationcertificationsystem.model.entity.CourseEvidenceMaterial;
+import com.educationcertificationsystem.model.entity.CourseResource;
+import com.educationcertificationsystem.model.entity.SysFile;
+import com.educationcertificationsystem.support.CsvExportSupport;
 import com.educationcertificationsystem.support.EntityAuditSupport;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,6 +27,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @RestController
@@ -44,28 +49,43 @@ public class ResourceController {
                                                   @RequestParam(required = false) Long taskId,
                                                   @RequestParam(required = false) String resourceType,
                                                   @RequestParam(required = false) String keyword) {
-        QueryWrapper<CourseResource> wrapper = activeWrapper();
-        if (courseId != null) {
-            wrapper.eq("course_id", courseId);
-        }
-        if (taskId != null) {
-            wrapper.eq("task_id", taskId);
-        }
-        if (StringUtils.hasText(resourceType)) {
-            wrapper.eq("resource_type", resourceType);
-        }
-        if (StringUtils.hasText(keyword)) {
-            wrapper.and(w -> w.like("resource_name", keyword).or().like("resource_desc", keyword));
-        }
+        QueryWrapper<CourseResource> wrapper = buildResourceWrapper(courseId, taskId, resourceType, keyword);
         wrapper.orderByDesc("id");
         return Result.success(courseResourceService.page(new Page<>(page, size), wrapper));
+    }
+
+    @GetMapping("/api/course-resources/export")
+    public ResponseEntity<ByteArrayResource> exportResources(@RequestParam(required = false) Long courseId,
+                                                             @RequestParam(required = false) Long taskId,
+                                                             @RequestParam(required = false) String resourceType,
+                                                             @RequestParam(required = false) String keyword) {
+        List<CourseResource> records = courseResourceService.list(buildResourceWrapper(courseId, taskId, resourceType, keyword).orderByDesc("id"));
+        List<List<?>> rows = new ArrayList<>();
+        for (CourseResource record : records) {
+            rows.add(List.of(
+                    record.getId(),
+                    record.getCourseId(),
+                    nullable(record.getTaskId()),
+                    nullable(record.getResourceType()),
+                    nullable(record.getResourceName()),
+                    nullable(record.getFileId()),
+                    nullable(record.getVisibleScopeType()),
+                    nullable(record.getVisibleScopeId()),
+                    nullable(record.getPublishStatus()),
+                    nullable(record.getRemark())
+            ));
+        }
+        return CsvExportSupport.csv("course-resources.csv",
+                List.of("id", "courseId", "taskId", "resourceType", "resourceName", "fileId",
+                        "visibleScopeType", "visibleScopeId", "publishStatus", "remark"),
+                rows);
     }
 
     @PostMapping("/api/course-resources")
     @Transactional
     public Result<CourseResource> createResource(@RequestBody CourseResource resource) {
-        SysFile file = loadFileIfPresent(resource.getFileId());
-        if (!StringUtils.hasText(resource.getResourceName()) && file != null) {
+        SysFile file = requireFile(resource.getFileId(), "课程资源必须先上传文件");
+        if (!StringUtils.hasText(resource.getResourceName())) {
             resource.setResourceName(file.getOriginalName());
         }
         if (resource.getPublishStatus() == null) {
@@ -73,9 +93,7 @@ public class ResourceController {
         }
         EntityAuditSupport.touchCreate(resource);
         courseResourceService.save(resource);
-        if (file != null) {
-            fileStorageService.bindFile(file.getId(), BIZ_TYPE_COURSE_RESOURCE, resource.getId());
-        }
+        fileStorageService.bindFile(file.getId(), BIZ_TYPE_COURSE_RESOURCE, resource.getId());
         return Result.success(resource);
     }
 
@@ -89,15 +107,13 @@ public class ResourceController {
         Long oldFileId = current.getFileId();
         BeanUtil.copyProperties(resource, current, CopyOptions.create().setIgnoreNullValue(true)
                 .setIgnoreProperties("id", "createdAt", "updatedAt", "isDeleted"));
-        SysFile file = loadFileIfPresent(current.getFileId());
-        if (file != null && !StringUtils.hasText(current.getResourceName())) {
+        SysFile file = requireFile(current.getFileId(), "课程资源必须绑定文件");
+        if (!StringUtils.hasText(current.getResourceName())) {
             current.setResourceName(file.getOriginalName());
         }
         EntityAuditSupport.touchUpdate(current);
         courseResourceService.updateById(current);
-        if (file != null) {
-            fileStorageService.bindFile(file.getId(), BIZ_TYPE_COURSE_RESOURCE, current.getId());
-        }
+        fileStorageService.bindFile(file.getId(), BIZ_TYPE_COURSE_RESOURCE, current.getId());
         if (oldFileId != null && !Objects.equals(oldFileId, current.getFileId())) {
             fileStorageService.deleteFile(oldFileId);
         }
@@ -140,21 +156,36 @@ public class ResourceController {
                                                           @RequestParam(required = false) Long methodId,
                                                           @RequestParam(required = false) String reviewStatus,
                                                           @RequestParam(required = false) String keyword) {
-        QueryWrapper<CourseEvidenceMaterial> wrapper = activeWrapper();
-        if (taskId != null) {
-            wrapper.eq("task_id", taskId);
-        }
-        if (methodId != null) {
-            wrapper.eq("method_id", methodId);
-        }
-        if (StringUtils.hasText(reviewStatus)) {
-            wrapper.eq("review_status", reviewStatus);
-        }
-        if (StringUtils.hasText(keyword)) {
-            wrapper.and(w -> w.like("material_type", keyword).or().like("remark", keyword));
-        }
+        QueryWrapper<CourseEvidenceMaterial> wrapper = buildMaterialWrapper(taskId, methodId, reviewStatus, keyword);
         wrapper.orderByDesc("id");
         return Result.success(evidenceMaterialService.page(new Page<>(page, size), wrapper));
+    }
+
+    @GetMapping("/api/evidence-materials/export")
+    public ResponseEntity<ByteArrayResource> exportMaterials(@RequestParam(required = false) Long taskId,
+                                                             @RequestParam(required = false) Long methodId,
+                                                             @RequestParam(required = false) String reviewStatus,
+                                                             @RequestParam(required = false) String keyword) {
+        List<CourseEvidenceMaterial> records = evidenceMaterialService.list(buildMaterialWrapper(taskId, methodId, reviewStatus, keyword).orderByDesc("id"));
+        List<List<?>> rows = new ArrayList<>();
+        for (CourseEvidenceMaterial record : records) {
+            rows.add(List.of(
+                    record.getId(),
+                    record.getTaskId(),
+                    record.getMethodId(),
+                    nullable(record.getMaterialType()),
+                    nullable(record.getFileId()),
+                    nullable(record.getSourceStudentId()),
+                    nullable(record.getReviewStatus()),
+                    nullable(record.getReviewUserId()),
+                    nullable(record.getReviewComment()),
+                    nullable(record.getRemark())
+            ));
+        }
+        return CsvExportSupport.csv("evidence-materials.csv",
+                List.of("id", "taskId", "methodId", "materialType", "fileId", "sourceStudentId",
+                        "reviewStatus", "reviewUserId", "reviewComment", "remark"),
+                rows);
     }
 
     @PostMapping("/api/evidence-materials")
@@ -163,13 +194,26 @@ public class ResourceController {
         if (!StringUtils.hasText(material.getReviewStatus())) {
             material.setReviewStatus("PENDING");
         }
-        SysFile file = loadFileIfPresent(material.getFileId());
+        SysFile file = requireFile(material.getFileId(), "证据材料必须先上传文件");
         EntityAuditSupport.touchCreate(material);
         evidenceMaterialService.save(material);
-        if (file != null) {
+        fileStorageService.bindFile(file.getId(), BIZ_TYPE_EVIDENCE_MATERIAL, material.getId());
+        return Result.success(material);
+    }
+
+    @PostMapping("/api/evidence-materials/batch")
+    @Transactional
+    public Result<List<CourseEvidenceMaterial>> createMaterialBatch(@RequestBody List<CourseEvidenceMaterial> materials) {
+        for (CourseEvidenceMaterial material : materials) {
+            if (!StringUtils.hasText(material.getReviewStatus())) {
+                material.setReviewStatus("PENDING");
+            }
+            SysFile file = requireFile(material.getFileId(), "证据材料必须先上传文件");
+            EntityAuditSupport.touchCreate(material);
+            evidenceMaterialService.save(material);
             fileStorageService.bindFile(file.getId(), BIZ_TYPE_EVIDENCE_MATERIAL, material.getId());
         }
-        return Result.success(material);
+        return Result.success(materials);
     }
 
     @PutMapping("/api/evidence-materials/{id}")
@@ -182,12 +226,10 @@ public class ResourceController {
         Long oldFileId = current.getFileId();
         BeanUtil.copyProperties(material, current, CopyOptions.create().setIgnoreNullValue(true)
                 .setIgnoreProperties("id", "createdAt", "updatedAt", "isDeleted"));
-        SysFile file = loadFileIfPresent(current.getFileId());
+        SysFile file = requireFile(current.getFileId(), "证据材料必须绑定文件");
         EntityAuditSupport.touchUpdate(current);
         evidenceMaterialService.updateById(current);
-        if (file != null) {
-            fileStorageService.bindFile(file.getId(), BIZ_TYPE_EVIDENCE_MATERIAL, current.getId());
-        }
+        fileStorageService.bindFile(file.getId(), BIZ_TYPE_EVIDENCE_MATERIAL, current.getId());
         if (oldFileId != null && !Objects.equals(oldFileId, current.getFileId())) {
             fileStorageService.deleteFile(oldFileId);
         }
@@ -226,14 +268,52 @@ public class ResourceController {
         return Result.success(current);
     }
 
+    private QueryWrapper<CourseResource> buildResourceWrapper(Long courseId, Long taskId, String resourceType, String keyword) {
+        QueryWrapper<CourseResource> wrapper = activeWrapper();
+        if (courseId != null) {
+            wrapper.eq("course_id", courseId);
+        }
+        if (taskId != null) {
+            wrapper.eq("task_id", taskId);
+        }
+        if (StringUtils.hasText(resourceType)) {
+            wrapper.eq("resource_type", resourceType);
+        }
+        if (StringUtils.hasText(keyword)) {
+            wrapper.and(w -> w.like("resource_name", keyword).or().like("resource_desc", keyword));
+        }
+        return wrapper;
+    }
+
+    private QueryWrapper<CourseEvidenceMaterial> buildMaterialWrapper(Long taskId, Long methodId, String reviewStatus, String keyword) {
+        QueryWrapper<CourseEvidenceMaterial> wrapper = activeWrapper();
+        if (taskId != null) {
+            wrapper.eq("task_id", taskId);
+        }
+        if (methodId != null) {
+            wrapper.eq("method_id", methodId);
+        }
+        if (StringUtils.hasText(reviewStatus)) {
+            wrapper.eq("review_status", reviewStatus);
+        }
+        if (StringUtils.hasText(keyword)) {
+            wrapper.and(w -> w.like("material_type", keyword).or().like("remark", keyword));
+        }
+        return wrapper;
+    }
+
     private <T> QueryWrapper<T> activeWrapper() {
         return new QueryWrapper<T>().and(w -> w.eq("is_deleted", 0).or().isNull("is_deleted"));
     }
 
-    private SysFile loadFileIfPresent(Long fileId) {
+    private SysFile requireFile(Long fileId, String message) {
         if (fileId == null) {
-            return null;
+            throw new IllegalArgumentException(message);
         }
         return fileStorageService.requireFile(fileId);
+    }
+
+    private Object nullable(Object value) {
+        return value == null ? "" : value;
     }
 }

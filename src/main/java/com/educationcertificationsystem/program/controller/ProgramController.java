@@ -5,6 +5,10 @@ import cn.hutool.core.bean.copier.CopyOptions;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.educationcertificationsystem.common.Result;
+import com.educationcertificationsystem.course.service.EduCourseObjectiveIndicatorPointService;
+import com.educationcertificationsystem.course.service.EduCourseService;
+import com.educationcertificationsystem.course.service.TeachingTaskService;
+import com.educationcertificationsystem.eval.service.EvalGraduationRequirementResultService;
 import com.educationcertificationsystem.model.dto.ProgramVersionCopyRequest;
 import com.educationcertificationsystem.model.entity.*;
 import com.educationcertificationsystem.org.service.OrgGradeService;
@@ -13,6 +17,7 @@ import com.educationcertificationsystem.support.EntityAuditSupport;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -39,6 +44,10 @@ public class ProgramController {
     private final TrCourseRequirementSupportService courseSupportService;
     private final TrProgramApplyGradeService applyGradeService;
     private final OrgGradeService orgGradeService;
+    private final EduCourseService courseService;
+    private final EduCourseObjectiveIndicatorPointService objectiveIndicatorPointService;
+    private final TeachingTaskService teachingTaskService;
+    private final EvalGraduationRequirementResultService evalGraduationRequirementResultService;
 
     @GetMapping("/versions")
     public Result<Page<TrProgramVersion>> versions(@RequestParam(defaultValue = "1") long page,
@@ -69,6 +78,7 @@ public class ProgramController {
 
     @PostMapping("/versions")
     public Result<TrProgramVersion> createVersion(@RequestBody TrProgramVersion version) {
+        validateVersionUnique(version.getMajorId(), version.getVersionNo(), null);
         if (version.getStatus() == null || version.getStatus().isBlank()) {
             version.setStatus("DRAFT");
         }
@@ -89,6 +99,7 @@ public class ProgramController {
         BeanUtil.copyProperties(version, current, CopyOptions.create()
                 .setIgnoreNullValue(true)
                 .setIgnoreProperties("id", "createdAt", "updatedAt", "isDeleted", "releasedAt", "copyFromVersionId"));
+        validateVersionUnique(current.getMajorId(), current.getVersionNo(), current.getId());
         EntityAuditSupport.touchUpdate(current);
         versionService.updateById(current);
         return Result.success(current);
@@ -116,6 +127,7 @@ public class ProgramController {
         if (current == null) {
             return Result.error("版本不存在");
         }
+        validateVersionDeleteAllowed(id);
         EntityAuditSupport.touchDelete(current);
         versionService.updateById(current);
 
@@ -177,6 +189,7 @@ public class ProgramController {
         copy.setStatus("DRAFT");
         copy.setCopyFromVersionId(source.getId());
         copy.setReleasedAt(null);
+        validateVersionUnique(copy.getMajorId(), copy.getVersionNo(), null);
         EntityAuditSupport.touchCreate(copy);
         versionService.save(copy);
 
@@ -304,9 +317,14 @@ public class ProgramController {
     @PutMapping("/versions/{id}/grades")
     @Transactional
     public Result<Void> replaceGrades(@PathVariable Long id, @RequestBody List<Long> gradeIds) {
+        requireActiveVersion(id);
+        List<Long> distinctGradeIds = CollectionUtils.isEmpty(gradeIds)
+                ? List.of()
+                : gradeIds.stream().filter(Objects::nonNull).distinct().toList();
+        validateGradeIdsExist(distinctGradeIds);
         applyGradeService.remove(new QueryWrapper<TrProgramApplyGrade>().eq("program_version_id", id));
-        if (!CollectionUtils.isEmpty(gradeIds)) {
-            List<TrProgramApplyGrade> rows = gradeIds.stream().filter(Objects::nonNull).map(gradeId -> {
+        if (!distinctGradeIds.isEmpty()) {
+            List<TrProgramApplyGrade> rows = distinctGradeIds.stream().map(gradeId -> {
                 TrProgramApplyGrade row = new TrProgramApplyGrade();
                 row.setProgramVersionId(id);
                 row.setGradeId(gradeId);
@@ -338,6 +356,7 @@ public class ProgramController {
 
     @PostMapping("/targets")
     public Result<TrProgramTarget> createTarget(@RequestBody TrProgramTarget target) {
+        validateTargetCodeUnique(target.getProgramVersionId(), target.getTargetCode(), null);
         if (target.getEnabled() == null) {
             target.setEnabled(1);
         }
@@ -352,6 +371,10 @@ public class ProgramController {
         if (current == null) {
             return Result.error("培养目标不存在");
         }
+        validateTargetCodeUnique(
+                target.getProgramVersionId() != null ? target.getProgramVersionId() : current.getProgramVersionId(),
+                StringUtils.hasText(target.getTargetCode()) ? target.getTargetCode() : current.getTargetCode(),
+                current.getId());
         BeanUtil.copyProperties(target, current, CopyOptions.create().setIgnoreNullValue(true)
                 .setIgnoreProperties("id", "createdAt", "updatedAt", "isDeleted"));
         EntityAuditSupport.touchUpdate(current);
@@ -366,6 +389,7 @@ public class ProgramController {
         if (current == null) {
             return Result.error("培养目标不存在");
         }
+        validateTargetDeleteAllowed(id);
         EntityAuditSupport.touchDelete(current);
         targetService.updateById(current);
         markDeleted(targetSupportService.list(new QueryWrapper<TrTargetRequirementSupport>()
@@ -394,6 +418,7 @@ public class ProgramController {
 
     @PostMapping("/graduation-requirements")
     public Result<TrGraduationRequirement> createRequirement(@RequestBody TrGraduationRequirement requirement) {
+        validateRequirementCodeUnique(requirement.getProgramVersionId(), requirement.getRequirementCode(), null);
         if (requirement.getEnabled() == null) {
             requirement.setEnabled(1);
         }
@@ -408,6 +433,10 @@ public class ProgramController {
         if (current == null) {
             return Result.error("毕业要求不存在");
         }
+        validateRequirementCodeUnique(
+                requirement.getProgramVersionId() != null ? requirement.getProgramVersionId() : current.getProgramVersionId(),
+                StringUtils.hasText(requirement.getRequirementCode()) ? requirement.getRequirementCode() : current.getRequirementCode(),
+                current.getId());
         BeanUtil.copyProperties(requirement, current, CopyOptions.create().setIgnoreNullValue(true)
                 .setIgnoreProperties("id", "createdAt", "updatedAt", "isDeleted"));
         EntityAuditSupport.touchUpdate(current);
@@ -422,6 +451,7 @@ public class ProgramController {
         if (current == null) {
             return Result.error("毕业要求不存在");
         }
+        validateRequirementDeleteAllowed(id);
         EntityAuditSupport.touchDelete(current);
         requirementService.updateById(current);
         markDeleted(indicatorPointService.list(new QueryWrapper<TrRequirementIndicatorPoint>()
@@ -453,6 +483,7 @@ public class ProgramController {
 
     @PostMapping("/indicator-points")
     public Result<TrRequirementIndicatorPoint> createIndicatorPoint(@RequestBody TrRequirementIndicatorPoint indicatorPoint) {
+        validateIndicatorCodeUnique(indicatorPoint.getGraduationRequirementId(), indicatorPoint.getIndicatorCode(), null);
         if (indicatorPoint.getEnabled() == null) {
             indicatorPoint.setEnabled(1);
         }
@@ -467,6 +498,10 @@ public class ProgramController {
         if (current == null) {
             return Result.error("指标点不存在");
         }
+        validateIndicatorCodeUnique(
+                indicatorPoint.getGraduationRequirementId() != null ? indicatorPoint.getGraduationRequirementId() : current.getGraduationRequirementId(),
+                StringUtils.hasText(indicatorPoint.getIndicatorCode()) ? indicatorPoint.getIndicatorCode() : current.getIndicatorCode(),
+                current.getId());
         BeanUtil.copyProperties(indicatorPoint, current, CopyOptions.create().setIgnoreNullValue(true)
                 .setIgnoreProperties("id", "createdAt", "updatedAt", "isDeleted"));
         EntityAuditSupport.touchUpdate(current);
@@ -480,11 +515,9 @@ public class ProgramController {
         if (current == null) {
             return Result.error("指标点不存在");
         }
+        validateIndicatorDeleteAllowed(id);
         EntityAuditSupport.touchDelete(current);
         indicatorPointService.updateById(current);
-        markDeleted(indicatorSupportService.list(new QueryWrapper<TrRequirementIndicatorSupport>()
-                .and(w -> w.eq("is_deleted", 0).or().isNull("is_deleted"))
-                .eq("indicator_point_id", id)), indicatorSupportService);
         return Result.success();
     }
 
@@ -517,6 +550,7 @@ public class ProgramController {
 
     @PostMapping("/target-supports")
     public Result<TrTargetRequirementSupport> createTargetSupport(@RequestBody TrTargetRequirementSupport support) {
+        validateTargetSupportUnique(support.getProgramTargetId(), support.getGraduationRequirementId(), null);
         if (support.getSupportWeight() == null) {
             support.setSupportWeight(BigDecimal.ZERO);
         }
@@ -531,6 +565,10 @@ public class ProgramController {
         if (current == null) {
             return Result.error("支撑关系不存在");
         }
+        validateTargetSupportUnique(
+                support.getProgramTargetId() != null ? support.getProgramTargetId() : current.getProgramTargetId(),
+                support.getGraduationRequirementId() != null ? support.getGraduationRequirementId() : current.getGraduationRequirementId(),
+                current.getId());
         BeanUtil.copyProperties(support, current, CopyOptions.create().setIgnoreNullValue(true)
                 .setIgnoreProperties("id", "createdAt", "updatedAt", "isDeleted"));
         EntityAuditSupport.touchUpdate(current);
@@ -578,6 +616,7 @@ public class ProgramController {
 
     @PostMapping("/indicator-supports")
     public Result<TrRequirementIndicatorSupport> createIndicatorSupport(@RequestBody TrRequirementIndicatorSupport support) {
+        validateIndicatorSupportUnique(support.getGraduationRequirementId(), support.getIndicatorPointId(), null);
         if (support.getSupportWeight() == null) {
             support.setSupportWeight(BigDecimal.ZERO);
         }
@@ -592,6 +631,10 @@ public class ProgramController {
         if (current == null) {
             return Result.error("指标支撑关系不存在");
         }
+        validateIndicatorSupportUnique(
+                support.getGraduationRequirementId() != null ? support.getGraduationRequirementId() : current.getGraduationRequirementId(),
+                support.getIndicatorPointId() != null ? support.getIndicatorPointId() : current.getIndicatorPointId(),
+                current.getId());
         BeanUtil.copyProperties(support, current, CopyOptions.create().setIgnoreNullValue(true)
                 .setIgnoreProperties("id", "createdAt", "updatedAt", "isDeleted"));
         EntityAuditSupport.touchUpdate(current);
@@ -628,6 +671,8 @@ public class ProgramController {
 
     @PostMapping("/courses")
     public Result<TrProgramCourse> createProgramCourse(@RequestBody TrProgramCourse course) {
+        validateProgramCourseUnique(course.getProgramVersionId(), course.getCourseId(), null);
+        validateCourseSelectable(course.getCourseId());
         if (course.getIsRequired() == null) {
             course.setIsRequired(1);
         }
@@ -641,6 +686,12 @@ public class ProgramController {
         TrProgramCourse current = programCourseService.getById(id);
         if (current == null) {
             return Result.error("课程配置不存在");
+        }
+        Long targetProgramVersionId = course.getProgramVersionId() != null ? course.getProgramVersionId() : current.getProgramVersionId();
+        Long targetCourseId = course.getCourseId() != null ? course.getCourseId() : current.getCourseId();
+        validateProgramCourseUnique(targetProgramVersionId, targetCourseId, current.getId());
+        if (!Objects.equals(targetCourseId, current.getCourseId())) {
+            validateCourseSelectable(targetCourseId);
         }
         BeanUtil.copyProperties(course, current, CopyOptions.create().setIgnoreNullValue(true)
                 .setIgnoreProperties("id", "createdAt", "updatedAt", "isDeleted"));
@@ -686,6 +737,7 @@ public class ProgramController {
 
     @PostMapping("/course-supports")
     public Result<TrCourseRequirementSupport> createCourseSupport(@RequestBody TrCourseRequirementSupport support) {
+        validateCourseSupportUnique(support.getProgramVersionId(), support.getCourseId(), support.getGraduationRequirementId(), null);
         if (support.getSupportWeight() == null) {
             support.setSupportWeight(BigDecimal.ZERO);
         }
@@ -700,6 +752,11 @@ public class ProgramController {
         if (current == null) {
             return Result.error("课程支撑关系不存在");
         }
+        validateCourseSupportUnique(
+                support.getProgramVersionId() != null ? support.getProgramVersionId() : current.getProgramVersionId(),
+                support.getCourseId() != null ? support.getCourseId() : current.getCourseId(),
+                support.getGraduationRequirementId() != null ? support.getGraduationRequirementId() : current.getGraduationRequirementId(),
+                current.getId());
         BeanUtil.copyProperties(support, current, CopyOptions.create().setIgnoreNullValue(true)
                 .setIgnoreProperties("id", "createdAt", "updatedAt", "isDeleted"));
         EntityAuditSupport.touchUpdate(current);
@@ -720,6 +777,270 @@ public class ProgramController {
 
     private <T> QueryWrapper<T> activeWrapper() {
         return new QueryWrapper<T>().and(w -> w.eq("is_deleted", 0).or().isNull("is_deleted"));
+    }
+
+    private void validateVersionUnique(Long majorId, String versionNo, Long currentId) {
+        if (majorId == null) {
+            throw new IllegalArgumentException("专业ID不能为空");
+        }
+        if (!StringUtils.hasText(versionNo)) {
+            throw new IllegalArgumentException("方案版本号不能为空");
+        }
+        long count = versionService.count(this.<TrProgramVersion>activeWrapper()
+                .eq("major_id", majorId)
+                .eq("version_no", versionNo)
+                .ne(currentId != null, "id", currentId));
+        if (count > 0) {
+            throw new IllegalArgumentException("同一专业下方案版本号已存在");
+        }
+    }
+
+    private void validateTargetCodeUnique(Long programVersionId, String targetCode, Long currentId) {
+        requireActiveVersion(programVersionId);
+        if (!StringUtils.hasText(targetCode)) {
+            throw new IllegalArgumentException("培养目标编号不能为空");
+        }
+        long count = targetService.count(this.<TrProgramTarget>activeWrapper()
+                .eq("program_version_id", programVersionId)
+                .eq("target_code", targetCode)
+                .ne(currentId != null, "id", currentId));
+        if (count > 0) {
+            throw new IllegalArgumentException("培养目标编号已存在");
+        }
+    }
+
+    private void validateRequirementCodeUnique(Long programVersionId, String requirementCode, Long currentId) {
+        requireActiveVersion(programVersionId);
+        if (!StringUtils.hasText(requirementCode)) {
+            throw new IllegalArgumentException("毕业要求编号不能为空");
+        }
+        long count = requirementService.count(this.<TrGraduationRequirement>activeWrapper()
+                .eq("program_version_id", programVersionId)
+                .eq("requirement_code", requirementCode)
+                .ne(currentId != null, "id", currentId));
+        if (count > 0) {
+            throw new IllegalArgumentException("毕业要求编号已存在");
+        }
+    }
+
+    private void validateIndicatorCodeUnique(Long graduationRequirementId, String indicatorCode, Long currentId) {
+        requireActiveRequirement(graduationRequirementId);
+        if (!StringUtils.hasText(indicatorCode)) {
+            throw new IllegalArgumentException("指标点编号不能为空");
+        }
+        long count = indicatorPointService.count(this.<TrRequirementIndicatorPoint>activeWrapper()
+                .eq("graduation_requirement_id", graduationRequirementId)
+                .eq("indicator_code", indicatorCode)
+                .ne(currentId != null, "id", currentId));
+        if (count > 0) {
+            throw new IllegalArgumentException("指标点编号已存在");
+        }
+    }
+
+    private void validateTargetSupportUnique(Long programTargetId, Long graduationRequirementId, Long currentId) {
+        if (programTargetId == null || graduationRequirementId == null) {
+            throw new IllegalArgumentException("培养目标支撑关系字段不能为空");
+        }
+        TrProgramTarget target = requireActiveTarget(programTargetId);
+        TrGraduationRequirement requirement = requireActiveRequirement(graduationRequirementId);
+        if (!Objects.equals(target.getProgramVersionId(), requirement.getProgramVersionId())) {
+            throw new IllegalArgumentException("培养目标与毕业要求必须属于同一方案版本");
+        }
+        long count = targetSupportService.count(this.<TrTargetRequirementSupport>activeWrapper()
+                .eq("program_target_id", programTargetId)
+                .eq("graduation_requirement_id", graduationRequirementId)
+                .ne(currentId != null, "id", currentId));
+        if (count > 0) {
+            throw new IllegalArgumentException("培养目标与毕业要求的支撑关系已存在");
+        }
+    }
+
+    private void validateIndicatorSupportUnique(Long graduationRequirementId, Long indicatorPointId, Long currentId) {
+        if (graduationRequirementId == null || indicatorPointId == null) {
+            throw new IllegalArgumentException("毕业要求与指标点支撑字段不能为空");
+        }
+        TrGraduationRequirement requirement = requireActiveRequirement(graduationRequirementId);
+        TrRequirementIndicatorPoint indicatorPoint = requireActiveIndicatorPoint(indicatorPointId);
+        if (!Objects.equals(indicatorPoint.getGraduationRequirementId(), requirement.getId())) {
+            throw new IllegalArgumentException("指标点必须归属当前毕业要求");
+        }
+        long count = indicatorSupportService.count(this.<TrRequirementIndicatorSupport>activeWrapper()
+                .eq("graduation_requirement_id", graduationRequirementId)
+                .eq("indicator_point_id", indicatorPointId)
+                .ne(currentId != null, "id", currentId));
+        if (count > 0) {
+            throw new IllegalArgumentException("毕业要求与指标点支撑关系已存在");
+        }
+    }
+
+    private void validateProgramCourseUnique(Long programVersionId, Long courseId, Long currentId) {
+        requireActiveVersion(programVersionId);
+        if (courseId == null) {
+            throw new IllegalArgumentException("课程ID不能为空");
+        }
+        long count = programCourseService.count(this.<TrProgramCourse>activeWrapper()
+                .eq("program_version_id", programVersionId)
+                .eq("course_id", courseId)
+                .ne(currentId != null, "id", currentId));
+        if (count > 0) {
+            throw new IllegalArgumentException("该方案版本内课程已存在");
+        }
+    }
+
+    private void validateCourseSupportUnique(Long programVersionId, Long courseId, Long graduationRequirementId, Long currentId) {
+        requireActiveVersion(programVersionId);
+        if (courseId == null || graduationRequirementId == null) {
+            throw new IllegalArgumentException("课程支撑关系字段不能为空");
+        }
+        TrGraduationRequirement requirement = requireActiveRequirement(graduationRequirementId);
+        if (!Objects.equals(requirement.getProgramVersionId(), programVersionId)) {
+            throw new IllegalArgumentException("课程支撑的毕业要求必须属于当前方案版本");
+        }
+        long courseInVersionCount = programCourseService.count(this.<TrProgramCourse>activeWrapper()
+                .eq("program_version_id", programVersionId)
+                .eq("course_id", courseId));
+        if (courseInVersionCount == 0) {
+            throw new IllegalArgumentException("请先将课程加入方案后再配置支撑关系");
+        }
+        long count = courseSupportService.count(this.<TrCourseRequirementSupport>activeWrapper()
+                .eq("program_version_id", programVersionId)
+                .eq("course_id", courseId)
+                .eq("graduation_requirement_id", graduationRequirementId)
+                .ne(currentId != null, "id", currentId));
+        if (count > 0) {
+            throw new IllegalArgumentException("课程与毕业要求的支撑关系已存在");
+        }
+    }
+
+    private void validateVersionDeleteAllowed(Long versionId) {
+        long taskCount = teachingTaskService.count(this.<TeachingTask>activeWrapper().eq("program_version_id", versionId));
+        if (taskCount > 0) {
+            throw new IllegalArgumentException("方案版本已被授课任务引用，无法删除");
+        }
+        long resultCount = evalGraduationRequirementResultService.count(this.<EvalGraduationRequirementResult>activeWrapper().eq("program_version_id", versionId));
+        if (resultCount > 0) {
+            throw new IllegalArgumentException("方案版本已被毕业要求达成结果引用，无法删除");
+        }
+    }
+
+    private void validateTargetDeleteAllowed(Long targetId) {
+        long supportCount = targetSupportService.count(this.<TrTargetRequirementSupport>activeWrapper().eq("program_target_id", targetId));
+        if (supportCount > 0) {
+            throw new IllegalArgumentException("培养目标已被支撑矩阵引用，无法删除");
+        }
+    }
+
+    private void validateRequirementDeleteAllowed(Long requirementId) {
+        long targetSupportCount = targetSupportService.count(this.<TrTargetRequirementSupport>activeWrapper().eq("graduation_requirement_id", requirementId));
+        if (targetSupportCount > 0) {
+            throw new IllegalArgumentException("毕业要求已被培养目标支撑矩阵引用，无法删除");
+        }
+        long indicatorSupportCount = indicatorSupportService.count(this.<TrRequirementIndicatorSupport>activeWrapper().eq("graduation_requirement_id", requirementId));
+        if (indicatorSupportCount > 0) {
+            throw new IllegalArgumentException("毕业要求已被指标点支撑矩阵引用，无法删除");
+        }
+        long courseSupportCount = courseSupportService.count(this.<TrCourseRequirementSupport>activeWrapper().eq("graduation_requirement_id", requirementId));
+        if (courseSupportCount > 0) {
+            throw new IllegalArgumentException("毕业要求已被课程支撑矩阵引用，无法删除");
+        }
+        long resultCount = evalGraduationRequirementResultService.count(this.<EvalGraduationRequirementResult>activeWrapper().eq("requirement_id", requirementId));
+        if (resultCount > 0) {
+            throw new IllegalArgumentException("毕业要求已被达成结果引用，无法删除");
+        }
+        List<Long> indicatorIds = indicatorPointService.list(this.<TrRequirementIndicatorPoint>activeWrapper()
+                        .eq("graduation_requirement_id", requirementId))
+                .stream()
+                .map(TrRequirementIndicatorPoint::getId)
+                .toList();
+        if (!indicatorIds.isEmpty()) {
+            long objectiveMappingCount = objectiveIndicatorPointService.count(this.<EduCourseObjectiveIndicatorPoint>activeWrapper()
+                    .in("indicator_point_id", indicatorIds));
+            if (objectiveMappingCount > 0) {
+                throw new IllegalArgumentException("毕业要求下的指标点已被课程目标映射引用，无法删除");
+            }
+        }
+    }
+
+    private void validateIndicatorDeleteAllowed(Long indicatorPointId) {
+        long supportCount = indicatorSupportService.count(this.<TrRequirementIndicatorSupport>activeWrapper().eq("indicator_point_id", indicatorPointId));
+        if (supportCount > 0) {
+            throw new IllegalArgumentException("指标点已被支撑矩阵引用，无法删除");
+        }
+        long objectiveMappingCount = objectiveIndicatorPointService.count(this.<EduCourseObjectiveIndicatorPoint>activeWrapper().eq("indicator_point_id", indicatorPointId));
+        if (objectiveMappingCount > 0) {
+            throw new IllegalArgumentException("指标点已被课程目标映射引用，无法删除");
+        }
+    }
+
+    private void validateGradeIdsExist(List<Long> gradeIds) {
+        if (CollectionUtils.isEmpty(gradeIds)) {
+            return;
+        }
+        long count = orgGradeService.count(this.<OrgGrade>activeWrapper().in("id", gradeIds));
+        if (count != gradeIds.size()) {
+            throw new IllegalArgumentException("年级数据不存在或已删除");
+        }
+    }
+
+    private void validateCourseSelectable(Long courseId) {
+        if (courseId == null) {
+            throw new IllegalArgumentException("课程ID不能为空");
+        }
+        EduCourse course = courseService.getById(courseId);
+        if (course == null || isDeleted(course.getIsDeleted())) {
+            throw new IllegalArgumentException("课程不存在");
+        }
+        if (!Integer.valueOf(1).equals(course.getStatus())) {
+            throw new IllegalArgumentException("停用课程不可再被新方案引用");
+        }
+    }
+
+    private TrProgramVersion requireActiveVersion(Long versionId) {
+        if (versionId == null) {
+            throw new IllegalArgumentException("方案版本ID不能为空");
+        }
+        TrProgramVersion version = versionService.getById(versionId);
+        if (version == null || isDeleted(version.getIsDeleted())) {
+            throw new IllegalArgumentException("方案版本不存在");
+        }
+        return version;
+    }
+
+    private TrProgramTarget requireActiveTarget(Long targetId) {
+        if (targetId == null) {
+            throw new IllegalArgumentException("培养目标ID不能为空");
+        }
+        TrProgramTarget target = targetService.getById(targetId);
+        if (target == null || isDeleted(target.getIsDeleted())) {
+            throw new IllegalArgumentException("培养目标不存在");
+        }
+        return target;
+    }
+
+    private TrGraduationRequirement requireActiveRequirement(Long requirementId) {
+        if (requirementId == null) {
+            throw new IllegalArgumentException("毕业要求ID不能为空");
+        }
+        TrGraduationRequirement requirement = requirementService.getById(requirementId);
+        if (requirement == null || isDeleted(requirement.getIsDeleted())) {
+            throw new IllegalArgumentException("毕业要求不存在");
+        }
+        return requirement;
+    }
+
+    private TrRequirementIndicatorPoint requireActiveIndicatorPoint(Long indicatorPointId) {
+        if (indicatorPointId == null) {
+            throw new IllegalArgumentException("指标点ID不能为空");
+        }
+        TrRequirementIndicatorPoint indicatorPoint = indicatorPointService.getById(indicatorPointId);
+        if (indicatorPoint == null || isDeleted(indicatorPoint.getIsDeleted())) {
+            throw new IllegalArgumentException("指标点不存在");
+        }
+        return indicatorPoint;
+    }
+
+    private boolean isDeleted(Integer isDeleted) {
+        return isDeleted != null && isDeleted != 0;
     }
 
     private <T> void markDeleted(List<T> records, Object service) {

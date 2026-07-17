@@ -132,6 +132,36 @@ public class FileController {
                 .body(resource);
     }
 
+    @GetMapping("/{id}/preview")
+    public ResponseEntity<Resource> preview(@PathVariable Long id) {
+        SysFile file;
+        try {
+            file = fileStorageService.requireFile(id);
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage());
+        }
+        Resource resource = fileStorageService.loadAsResource(file);
+        Path path = Paths.get(file.getStoragePath()).toAbsolutePath().normalize();
+        String fileName = StringUtils.hasText(file.getOriginalName()) ? file.getOriginalName() : path.getFileName().toString();
+        MediaType mediaType = MediaTypeFactory.getMediaType(fileName).orElse(MediaType.APPLICATION_OCTET_STREAM);
+        long contentLength;
+        try {
+            contentLength = Files.size(path);
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "文件已丢失");
+        }
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .contentLength(contentLength)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.inline()
+                                .filename(fileName, StandardCharsets.UTF_8)
+                                .build()
+                                .toString())
+                .body(resource);
+    }
+
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         try {
