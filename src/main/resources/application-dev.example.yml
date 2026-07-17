@@ -6,3 +6,13 @@ spring:
     password: your_mysql_password
   rabbitmq:
     host: localhost
+
+app:
+  ai:
+    deepseek:
+      api-key: your_deepseek_api_key
+      base-url: https://api.deepseek.com
+      model: deepseek-v4-flash
+    qdrant:
+      base-url: http://localhost:6333
+      api-key: your_qdrant_api_key_if_any

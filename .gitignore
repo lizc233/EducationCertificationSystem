@@ -34,3 +34,5 @@ build/
 
 # local dev config
 src/main/resources/application-dev.yml
+/frontend/
+/EducationCertificationSystem_fronted/

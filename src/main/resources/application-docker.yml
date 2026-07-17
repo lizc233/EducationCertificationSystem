@@ -6,3 +6,13 @@ spring:
     password: Lizc20041020
   rabbitmq:
     host: rabbitmq
+
+app:
+  ai:
+    deepseek:
+      api-key: ${DEEPSEEK_API_KEY:}
+      base-url: https://api.deepseek.com
+      model: deepseek-v4-flash
+    qdrant:
+      base-url: http://qdrant:6333
+      api-key: ${QDRANT_API_KEY:}

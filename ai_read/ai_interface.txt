@@ -1,0 +1,138 @@
+前端联调字段清单
+
+  1. 报告章节 AI 生成
+     接口：
+
+  - POST /api/ai/reports/chapters/{chapterId}/generate
+
+  请求体：
+
+  {
+    "requesterUserId": 1,
+    "operationType": "EXPAND",
+    "templateCode": "REPORT_CHAPTER_EXPAND",
+    "useRagFlag": 1,
+    "topK": 5,
+    "remark": "optional"
+  }
+
+  说明：
+
+  - operationType: EXPAND 或 POLISH
+  - templateCode 可不传，后端会自动兜底
+
+  2. 报告章节 AI 确认回写
+     接口：
+
+  - POST /api/ai/reports/chapters/{chapterId}/confirm
+
+  请求体：
+
+  {
+    "requestId": 1,
+    "confirmedBy": 1,
+    "applyMode": "REPLACE",
+    "remark": "optional"
+  }
+
+  说明：
+
+  - applyMode: REPLACE 或 APPEND
+
+  3. 改进建议 AI 生成
+     接口：
+
+  - POST /api/ai/improve-suggestions/generate
+
+  请求体：
+
+  {
+    "requesterUserId": 1,
+    "ownerUserId": 1,
+    "responsibleUserId": 2,
+    "sourceType": "COURSE_TARGET_RESULT",
+    "sourceId": 12,
+    "targetType": "COURSE",
+    "targetId": 8,
+    "templateCode": "IMPROVE_PLAN_SUGGEST",
+    "priority": 1,
+    "dueDays": 30,
+    "topK": 5,
+    "remark": "optional"
+  }
+
+  4. 改进建议确认回写
+     接口：
+
+  - POST /api/ai/improve-suggestions/confirm
+
+  请求体：
+
+  {
+    "requestId": 1,
+    "confirmedBy": 1,
+    "ownerUserId": 1,
+    "responsibleUserId": 2,
+    "planCode": "AIIP20260717001",
+    "planName": "AI建议生成的改进计划",
+    "startDate": "2026-07-17",
+    "dueDate": "2026-08-16",
+    "remark": "optional"
+  }
+
+  5. AI 历史分页
+     接口：
+
+  - GET /api/ai/requests?pageNum=1&pageSize=10&scenarioType=REPORT_CHAPTER_EXPAND
+
+  可用筛选：
+
+  - scenarioType
+  - sourceType
+  - requesterUserId
+  - requestStatus
+
+  6. AI 详情
+     接口：
+
+  - GET /api/ai/requests/{requestId}
+
+  前端重点展示字段：
+
+  - requestStatus
+  - resultType
+  - resultText
+  - resultJson
+  - retrievedChunks
+  - retryCount
+  - humanConfirmedFlag
+  - confirmedAt
+
+  7. AI 重试
+     接口：
+
+  - POST /api/ai/requests/{requestId}/retry
+
+  请求体：
+
+  {
+    "operatorUserId": 1,
+    "remark": "retry"
+  }
+
+  8. 知识库重建
+     接口：
+
+  - POST /api/ai/knowledge/rebuild
+
+  请求体示例：
+
+  {
+    "rebuildType": "ALL"
+  }
+  或者：
+
+  {
+    "rebuildType": "IMPROVE_PLAN",
+    "planId": 5
+  }
