@@ -1,7 +1,9 @@
 package com.educationcertificationsystem.eval.mapper;
 
-import com.educationcertificationsystem.model.entity.EvalModelScope;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.educationcertificationsystem.model.entity.EvalModelScope;
+import java.util.List;
+import org.apache.ibatis.annotations.Param;
 
 /**
 * @author Lizc233
@@ -10,6 +12,10 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @Entity com.educationcertificationsystem.model.entity.EvalModelScope
 */
 public interface EvalModelScopeMapper extends BaseMapper<EvalModelScope> {
+
+    List<EvalModelScope> selectActiveByModelId(@Param("modelId") Long modelId);
+
+    int deleteByModelId(@Param("modelId") Long modelId);
 
 }
 
