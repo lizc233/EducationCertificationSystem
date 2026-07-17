@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.educationcertificationsystem.mapper.ReportChapterMapper">
+<mapper namespace="com.educationcertificationsystem.report.mapper.ReportChapterMapper">
 
-    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.ReportChapter">
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.ReportChapter">
             <id property="id" column="id" />
             <result property="projectId" column="project_id" />
             <result property="parentId" column="parent_id" />

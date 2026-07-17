@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.educationcertificationsystem.mapper.NoticeRecipientMapper">
+<mapper namespace="com.educationcertificationsystem.notice.mapper.NoticeRecipientMapper">
 
-    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.NoticeRecipient">
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.NoticeRecipient">
             <id property="id" column="id" />
             <result property="noticeId" column="notice_id" />
             <result property="recipientUserId" column="recipient_user_id" />
@@ -21,4 +21,80 @@
         id,notice_id,recipient_user_id,read_status,read_at,deleted_flag,
         created_at,updated_at,is_deleted,remark
     </sql>
+
+    <sql id="NoticeRecipient_Where">
+        where is_deleted = 0
+          and deleted_flag = 0
+        <if test="noticeId != null">
+            and notice_id = #{noticeId}
+        </if>
+        <if test="recipientUserId != null">
+            and recipient_user_id = #{recipientUserId}
+        </if>
+        <if test="readStatus != null">
+            and read_status = #{readStatus}
+        </if>
+    </sql>
+
+    <select id="selectActiveById" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from notice_recipient
+        where id = #{id}
+          and is_deleted = 0
+          and deleted_flag = 0
+        limit 1
+    </select>
+
+    <select id="selectByNoticeIdAndRecipientUserId" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from notice_recipient
+        where notice_id = #{noticeId}
+          and recipient_user_id = #{recipientUserId}
+        limit 1
+    </select>
+
+    <select id="countByCondition" resultType="long">
+        select count(1)
+        from notice_recipient
+        <include refid="NoticeRecipient_Where"/>
+    </select>
+
+    <select id="countUnread" resultType="long">
+        select count(1)
+        from notice_recipient
+        where is_deleted = 0
+          and deleted_flag = 0
+          and recipient_user_id = #{recipientUserId}
+          and read_status = 0
+    </select>
+
+    <select id="selectByCondition" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from notice_recipient
+        <include refid="NoticeRecipient_Where"/>
+        order by id desc
+        limit #{offset}, #{size}
+    </select>
+
+    <insert id="batchInsertIgnore">
+        insert ignore into notice_recipient (
+            notice_id,
+            recipient_user_id,
+            read_status,
+            deleted_flag,
+            is_deleted,
+            remark
+        )
+        values
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.noticeId},
+                #{item.recipientUserId},
+                #{item.readStatus},
+                #{item.deletedFlag},
+                #{item.isDeleted},
+                #{item.remark}
+            )
+        </foreach>
+    </insert>
 </mapper>

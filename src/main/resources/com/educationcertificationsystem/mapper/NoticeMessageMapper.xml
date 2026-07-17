@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.educationcertificationsystem.mapper.NoticeMessageMapper">
+<mapper namespace="com.educationcertificationsystem.notice.mapper.NoticeMessageMapper">
 
-    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.NoticeMessage">
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.NoticeMessage">
             <id property="id" column="id" />
             <result property="noticeType" column="notice_type" />
             <result property="title" column="title" />
@@ -28,4 +28,45 @@
         biz_id,channel_type,priority_level,publish_status,send_at,
         expire_at,created_at,updated_at,is_deleted,remark
     </sql>
+
+    <sql id="NoticeMessage_Where">
+        where is_deleted = 0
+        <if test="noticeType != null and noticeType != ''">
+            and notice_type = #{noticeType}
+        </if>
+        <if test="publishStatus != null and publishStatus != ''">
+            and publish_status = #{publishStatus}
+        </if>
+        <if test="channelType != null and channelType != ''">
+            and channel_type = #{channelType}
+        </if>
+        <if test="senderUserId != null">
+            and sender_user_id = #{senderUserId}
+        </if>
+        <if test="title != null and title != ''">
+            and title like concat('%', #{title}, '%')
+        </if>
+    </sql>
+
+    <select id="selectActiveById" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from notice_message
+        where id = #{id}
+          and is_deleted = 0
+        limit 1
+    </select>
+
+    <select id="countByCondition" resultType="long">
+        select count(1)
+        from notice_message
+        <include refid="NoticeMessage_Where"/>
+    </select>
+
+    <select id="selectByCondition" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from notice_message
+        <include refid="NoticeMessage_Where"/>
+        order by id desc
+        limit #{offset}, #{size}
+    </select>
 </mapper>

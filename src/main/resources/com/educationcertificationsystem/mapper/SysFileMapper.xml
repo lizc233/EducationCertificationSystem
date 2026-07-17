@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.educationcertificationsystem.mapper.SysFileMapper">
+<mapper namespace="com.educationcertificationsystem.file.mapper.SysFileMapper">
 
-    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.SysFile">
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.SysFile">
             <id property="id" column="id" />
             <result property="bizType" column="biz_type" />
             <result property="bizId" column="biz_id" />

@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.educationcertificationsystem.mapper.EvalRecalcJobMapper">
+<mapper namespace="com.educationcertificationsystem.eval.mapper.EvalRecalcJobMapper">
 
-    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.EvalRecalcJob">
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.EvalRecalcJob">
             <id property="id" column="id" />
             <result property="jobNo" column="job_no" />
             <result property="jobType" column="job_type" />

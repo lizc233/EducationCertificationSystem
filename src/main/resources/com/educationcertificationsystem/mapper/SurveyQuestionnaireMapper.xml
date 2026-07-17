@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.educationcertificationsystem.mapper.SurveyQuestionnaireMapper">
+<mapper namespace="com.educationcertificationsystem.survey.mapper.SurveyQuestionnaireMapper">
 
-    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.SurveyQuestionnaire">
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.SurveyQuestionnaire">
             <id property="id" column="id" />
             <result property="questionnaireCode" column="questionnaire_code" />
             <result property="title" column="title" />

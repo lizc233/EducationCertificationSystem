@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.educationcertificationsystem.mapper.SysDictItemMapper">
+<mapper namespace="com.educationcertificationsystem.system.mapper.SysDictItemMapper">
 
-    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.SysDictItem">
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.SysDictItem">
             <id property="id" column="id" />
             <result property="dictTypeId" column="dict_type_id" />
             <result property="itemLabel" column="item_label" />

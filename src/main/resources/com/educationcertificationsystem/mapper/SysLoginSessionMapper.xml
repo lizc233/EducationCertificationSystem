@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.educationcertificationsystem.mapper.SysLoginSessionMapper">
+<mapper namespace="com.educationcertificationsystem.user.mapper.SysLoginSessionMapper">
 
-    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.SysLoginSession">
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.SysLoginSession">
             <id property="id" column="id" />
             <result property="userId" column="user_id" />
             <result property="accessTokenHash" column="access_token_hash" />

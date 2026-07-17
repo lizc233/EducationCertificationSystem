@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.educationcertificationsystem.mapper.TrProgramCourseMapper">
+<mapper namespace="com.educationcertificationsystem.program.mapper.TrProgramCourseMapper">
 
-    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.TrProgramCourse">
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.TrProgramCourse">
             <id property="id" column="id" />
             <result property="programVersionId" column="program_version_id" />
             <result property="courseId" column="course_id" />

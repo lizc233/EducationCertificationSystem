@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.educationcertificationsystem.mapper.SurveyPublishTaskMapper">
+<mapper namespace="com.educationcertificationsystem.survey.mapper.SurveyPublishTaskMapper">
 
-    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.SurveyPublishTask">
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.SurveyPublishTask">
             <id property="id" column="id" />
             <result property="questionnaireId" column="questionnaire_id" />
             <result property="publishBatchNo" column="publish_batch_no" />

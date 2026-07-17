@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.educationcertificationsystem.mapper.AiAnalysisResultMapper">
+<mapper namespace="com.educationcertificationsystem.ai.mapper.AiAnalysisResultMapper">
 
-    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.AiAnalysisResult">
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.AiAnalysisResult">
             <id property="id" column="id" />
             <result property="requestId" column="request_id" />
             <result property="resultType" column="result_type" />

@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.educationcertificationsystem.mapper.EduSemesterMapper">
+<mapper namespace="com.educationcertificationsystem.course.mapper.EduSemesterMapper">
 
-    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.EduSemester">
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.EduSemester">
             <id property="id" column="id" />
             <result property="semesterCode" column="semester_code" />
             <result property="semesterName" column="semester_name" />

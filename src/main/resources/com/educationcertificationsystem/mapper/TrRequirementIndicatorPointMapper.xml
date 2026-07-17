@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.educationcertificationsystem.mapper.TrRequirementIndicatorPointMapper">
+<mapper namespace="com.educationcertificationsystem.program.mapper.TrRequirementIndicatorPointMapper">
 
-    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.TrRequirementIndicatorPoint">
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.TrRequirementIndicatorPoint">
             <id property="id" column="id" />
             <result property="graduationRequirementId" column="graduation_requirement_id" />
             <result property="indicatorCode" column="indicator_code" />

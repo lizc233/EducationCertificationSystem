@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.educationcertificationsystem.mapper.AiAnalysisRequestMapper">
+<mapper namespace="com.educationcertificationsystem.ai.mapper.AiAnalysisRequestMapper">
 
-    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.AiAnalysisRequest">
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.AiAnalysisRequest">
             <id property="id" column="id" />
             <result property="requestNo" column="request_no" />
             <result property="scenarioType" column="scenario_type" />

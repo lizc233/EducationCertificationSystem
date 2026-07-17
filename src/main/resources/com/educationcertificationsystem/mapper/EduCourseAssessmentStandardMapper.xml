@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.educationcertificationsystem.mapper.EduCourseAssessmentStandardMapper">
+<mapper namespace="com.educationcertificationsystem.course.mapper.EduCourseAssessmentStandardMapper">
 
-    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.EduCourseAssessmentStandard">
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.EduCourseAssessmentStandard">
             <id property="id" column="id" />
             <result property="methodId" column="method_id" />
             <result property="standardName" column="standard_name" />

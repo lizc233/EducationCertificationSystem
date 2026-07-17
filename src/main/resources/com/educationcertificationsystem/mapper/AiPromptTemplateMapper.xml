@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.educationcertificationsystem.mapper.AiPromptTemplateMapper">
+<mapper namespace="com.educationcertificationsystem.ai.mapper.AiPromptTemplateMapper">
 
-    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.AiPromptTemplate">
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.AiPromptTemplate">
             <id property="id" column="id" />
             <result property="templateCode" column="template_code" />
             <result property="templateName" column="template_name" />

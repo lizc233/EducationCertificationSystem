@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.educationcertificationsystem.mapper.OrgCollegeMapper">
+<mapper namespace="com.educationcertificationsystem.org.mapper.OrgCollegeMapper">
 
-    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.entity.OrgCollege">
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.OrgCollege">
             <id property="id" column="id" />
             <result property="collegeCode" column="college_code" />
             <result property="collegeName" column="college_name" />
