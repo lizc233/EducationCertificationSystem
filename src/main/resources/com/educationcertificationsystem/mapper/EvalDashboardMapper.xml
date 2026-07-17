@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.eval.mapper.EvalDashboardMapper">
+
+    <sql id="CourseTargetWhere">
+        where r.is_deleted = 0
+        <if test="query != null and query.programVersionId != null">
+            and t.program_version_id = #{query.programVersionId}
+        </if>
+        <if test="query != null and query.majorId != null">
+            and pv.major_id = #{query.majorId}
+        </if>
+        <if test="query != null and query.gradeId != null">
+            and cls.grade_id = #{query.gradeId}
+        </if>
+        <if test="query != null and query.semesterId != null">
+            and t.semester_id = #{query.semesterId}
+        </if>
+        <if test="query != null and query.modelId != null">
+            and r.model_id = #{query.modelId}
+        </if>
+        <if test="query != null and query.courseId != null">
+            and t.course_id = #{query.courseId}
+        </if>
+        <if test="query != null and query.keyword != null and query.keyword != ''">
+            and (
+                c.course_name like concat('%', #{query.keyword}, '%')
+                or c.course_code like concat('%', #{query.keyword}, '%')
+                or obj.objective_name like concat('%', #{query.keyword}, '%')
+                or obj.objective_code like concat('%', #{query.keyword}, '%')
+                or sem.semester_name like concat('%', #{query.keyword}, '%')
+                or cls.class_name like concat('%', #{query.keyword}, '%')
+            )
+        </if>
+    </sql>
+
+    <sql id="GraduationExistsFilter">
+        <if test="query != null and (query.gradeId != null or query.semesterId != null or query.courseId != null)">
+            and exists (
+                select 1
+                from eval_result_detail d
+                inner join eval_course_target_result ctr on ctr.id = d.source_id and ctr.is_deleted = 0
+                inner join teaching_task t2 on t2.id = ctr.task_id and t2.is_deleted = 0
+                inner join org_class cls2 on cls2.id = t2.class_id and cls2.is_deleted = 0
+                where d.result_type = 'GRADUATION_REQUIREMENT'
+                  and d.result_id = r.id
+                  and d.source_type = 'COURSE_TARGET_RESULT'
+                <if test="query.gradeId != null">
+                    and cls2.grade_id = #{query.gradeId}
+                </if>
+                <if test="query.semesterId != null">
+                    and t2.semester_id = #{query.semesterId}
+                </if>
+                <if test="query.courseId != null">
+                    and t2.course_id = #{query.courseId}
+                </if>
+            )
+        </if>
+    </sql>
+
+    <sql id="GraduationWhere">
+        where r.is_deleted = 0
+        <if test="query != null and query.programVersionId != null">
+            and r.program_version_id = #{query.programVersionId}
+        </if>
+        <if test="query != null and query.majorId != null">
+            and pv.major_id = #{query.majorId}
+        </if>
+        <if test="query != null and query.modelId != null">
+            and r.model_id = #{query.modelId}
+        </if>
+        <include refid="GraduationExistsFilter"/>
+        <if test="query != null and query.keyword != null and query.keyword != ''">
+            and (
+                req.requirement_name like concat('%', #{query.keyword}, '%')
+                or req.requirement_code like concat('%', #{query.keyword}, '%')
+                or maj.major_name like concat('%', #{query.keyword}, '%')
+                or pv.version_name like concat('%', #{query.keyword}, '%')
+                or pv.version_no like concat('%', #{query.keyword}, '%')
+            )
+        </if>
+    </sql>
+
+    <select id="selectOverview" resultType="com.educationcertificationsystem.model.vo.eval.EvalDashboardOverviewVO">
+        select
+            (
+                select count(1)
+                from eval_course_target_result r
+                inner join teaching_task t on t.id = r.task_id and t.is_deleted = 0
+                left join tr_program_version pv on pv.id = t.program_version_id and pv.is_deleted = 0
+                left join org_class cls on cls.id = t.class_id and cls.is_deleted = 0
+                left join edu_semester sem on sem.id = t.semester_id and sem.is_deleted = 0
+                left join edu_course c on c.id = t.course_id and c.is_deleted = 0
+                left join edu_course_objective obj on obj.id = r.objective_id and obj.is_deleted = 0
+                <include refid="CourseTargetWhere"/>
+            ) as courseTargetResultCount,
+            (
+                select count(1)
+                from eval_graduation_requirement_result r
+                inner join tr_program_version pv on pv.id = r.program_version_id and pv.is_deleted = 0
+                left join org_major maj on maj.id = pv.major_id and maj.is_deleted = 0
+                left join tr_graduation_requirement req on req.id = r.requirement_id and req.is_deleted = 0
+                <include refid="GraduationWhere"/>
+            ) as graduationRequirementResultCount,
+            (
+                select count(1)
+                from eval_graduation_requirement_result r
+                inner join tr_program_version pv on pv.id = r.program_version_id and pv.is_deleted = 0
+                left join org_major maj on maj.id = pv.major_id and maj.is_deleted = 0
+                left join tr_graduation_requirement req on req.id = r.requirement_id and req.is_deleted = 0
+                <include refid="GraduationWhere"/>
+                  and r.warning_flag = 1
+            ) as warningCount,
+            (
+                select round(coalesce(avg(r.attainment_rate), 0), 2)
+                from eval_course_target_result r
+                inner join teaching_task t on t.id = r.task_id and t.is_deleted = 0
+                left join tr_program_version pv on pv.id = t.program_version_id and pv.is_deleted = 0
+                left join org_class cls on cls.id = t.class_id and cls.is_deleted = 0
+                left join edu_semester sem on sem.id = t.semester_id and sem.is_deleted = 0
+                left join edu_course c on c.id = t.course_id and c.is_deleted = 0
+                left join edu_course_objective obj on obj.id = r.objective_id and obj.is_deleted = 0
+                <include refid="CourseTargetWhere"/>
+            ) as avgCourseTargetAttainmentRate,
+            (
+                select round(coalesce(avg(r.attainment_rate), 0), 2)
+                from eval_graduation_requirement_result r
+                inner join tr_program_version pv on pv.id = r.program_version_id and pv.is_deleted = 0
+                left join org_major maj on maj.id = pv.major_id and maj.is_deleted = 0
+                left join tr_graduation_requirement req on req.id = r.requirement_id and req.is_deleted = 0
+                <include refid="GraduationWhere"/>
+            ) as avgGraduationRequirementAttainmentRate
+    </select>
+
+    <select id="selectSemesterTrend" resultType="com.educationcertificationsystem.model.vo.eval.EvalDashboardTrendPointVO">
+        select sem.id as semesterId,
+               sem.semester_name as semesterName,
+               count(1) as resultCount,
+               round(coalesce(avg(r.attainment_rate), 0), 2) as avgAttainmentRate,
+               round(coalesce(avg(r.attainment_value), 0), 2) as avgAttainmentValue
+        from eval_course_target_result r
+        inner join teaching_task t on t.id = r.task_id and t.is_deleted = 0
+        left join tr_program_version pv on pv.id = t.program_version_id and pv.is_deleted = 0
+        left join org_class cls on cls.id = t.class_id and cls.is_deleted = 0
+        left join edu_semester sem on sem.id = t.semester_id and sem.is_deleted = 0
+        left join edu_course c on c.id = t.course_id and c.is_deleted = 0
+        left join edu_course_objective obj on obj.id = r.objective_id and obj.is_deleted = 0
+        <include refid="CourseTargetWhere"/>
+        group by sem.id, sem.semester_name
+        order by sem.id asc
+    </select>
+
+    <select id="selectCourseDistribution" resultType="com.educationcertificationsystem.model.vo.eval.EvalDashboardDistributionItemVO">
+        select c.id as id,
+               c.course_code as code,
+               c.course_name as name,
+               count(1) as resultCount,
+               round(coalesce(avg(r.attainment_rate), 0), 2) as avgAttainmentRate,
+               round(coalesce(avg(r.attainment_value), 0), 2) as avgAttainmentValue,
+               sum(case when r.attainment_rate &lt; 100 then 1 else 0 end) as warningCount
+        from eval_course_target_result r
+        inner join teaching_task t on t.id = r.task_id and t.is_deleted = 0
+        left join tr_program_version pv on pv.id = t.program_version_id and pv.is_deleted = 0
+        left join org_class cls on cls.id = t.class_id and cls.is_deleted = 0
+        left join edu_semester sem on sem.id = t.semester_id and sem.is_deleted = 0
+        left join edu_course c on c.id = t.course_id and c.is_deleted = 0
+        left join edu_course_objective obj on obj.id = r.objective_id and obj.is_deleted = 0
+        <include refid="CourseTargetWhere"/>
+        group by c.id, c.course_code, c.course_name
+        order by avgAttainmentRate desc, c.id asc
+    </select>
+
+    <select id="selectRequirementDistribution" resultType="com.educationcertificationsystem.model.vo.eval.EvalDashboardDistributionItemVO">
+        select req.id as id,
+               req.requirement_code as code,
+               req.requirement_name as name,
+               count(1) as resultCount,
+               round(coalesce(avg(r.attainment_rate), 0), 2) as avgAttainmentRate,
+               round(coalesce(avg(r.attainment_value), 0), 2) as avgAttainmentValue,
+               sum(case when r.warning_flag = 1 then 1 else 0 end) as warningCount
+        from eval_graduation_requirement_result r
+        inner join tr_program_version pv on pv.id = r.program_version_id and pv.is_deleted = 0
+        left join org_major maj on maj.id = pv.major_id and maj.is_deleted = 0
+        left join tr_graduation_requirement req on req.id = r.requirement_id and req.is_deleted = 0
+        <include refid="GraduationWhere"/>
+        group by req.id, req.requirement_code, req.requirement_name
+        order by avgAttainmentRate desc, req.id asc
+    </select>
+
+    <select id="selectRequirementMatrix" resultType="com.educationcertificationsystem.model.vo.eval.EvalDashboardRequirementMatrixRowVO">
+        select r.id as resultId,
+               req.id as requirementId,
+               req.requirement_code as requirementCode,
+               req.requirement_name as requirementName,
+               r.attainment_rate as attainmentRate,
+               r.attainment_value as attainmentValue,
+               r.threshold_value as thresholdValue,
+               r.warning_flag as warningFlag,
+               r.lock_flag as lockFlag,
+               r.calc_time as calcTime
+        from eval_graduation_requirement_result r
+        inner join tr_program_version pv on pv.id = r.program_version_id and pv.is_deleted = 0
+        left join org_major maj on maj.id = pv.major_id and maj.is_deleted = 0
+        left join tr_graduation_requirement req on req.id = r.requirement_id and req.is_deleted = 0
+        <include refid="GraduationWhere"/>
+        order by req.sort_no asc, req.id asc
+    </select>
+
+    <select id="countCourseTargetDetails" resultType="long">
+        select count(1)
+        from eval_course_target_result r
+        inner join teaching_task t on t.id = r.task_id and t.is_deleted = 0
+        left join tr_program_version pv on pv.id = t.program_version_id and pv.is_deleted = 0
+        left join org_major maj on maj.id = pv.major_id and maj.is_deleted = 0
+        left join org_class cls on cls.id = t.class_id and cls.is_deleted = 0
+        left join edu_semester sem on sem.id = t.semester_id and sem.is_deleted = 0
+        left join edu_course c on c.id = t.course_id and c.is_deleted = 0
+        left join edu_course_objective obj on obj.id = r.objective_id and obj.is_deleted = 0
+        left join eval_model m on m.id = r.model_id and m.is_deleted = 0
+        <include refid="CourseTargetWhere"/>
+    </select>
+
+    <select id="selectCourseTargetDetails" resultType="com.educationcertificationsystem.model.vo.eval.EvalDashboardCourseTargetDetailVO">
+        select r.id as resultId,
+               maj.major_name as majorName,
+               coalesce(pv.version_name, pv.version_no) as programVersionName,
+               sem.semester_name as semesterName,
+               cls.class_name as className,
+               c.course_name as courseName,
+               t.task_code as taskCode,
+               obj.objective_code as objectiveCode,
+               obj.objective_name as objectiveName,
+               m.model_name as modelName,
+               r.attainment_rate as attainmentRate,
+               r.attainment_value as attainmentValue,
+               r.target_value as targetValue,
+               r.result_level as resultLevel,
+               r.locked_flag as lockedFlag,
+               r.calc_time as calcTime,
+               r.remark as remark
+        from eval_course_target_result r
+        inner join teaching_task t on t.id = r.task_id and t.is_deleted = 0
+        left join tr_program_version pv on pv.id = t.program_version_id and pv.is_deleted = 0
+        left join org_major maj on maj.id = pv.major_id and maj.is_deleted = 0
+        left join org_class cls on cls.id = t.class_id and cls.is_deleted = 0
+        left join edu_semester sem on sem.id = t.semester_id and sem.is_deleted = 0
+        left join edu_course c on c.id = t.course_id and c.is_deleted = 0
+        left join edu_course_objective obj on obj.id = r.objective_id and obj.is_deleted = 0
+        left join eval_model m on m.id = r.model_id and m.is_deleted = 0
+        <include refid="CourseTargetWhere"/>
+        order by r.calc_time desc, r.id desc
+        limit #{offset}, #{size}
+    </select>
+
+    <select id="selectAllCourseTargetDetails" resultType="com.educationcertificationsystem.model.vo.eval.EvalDashboardCourseTargetDetailVO">
+        select r.id as resultId,
+               maj.major_name as majorName,
+               coalesce(pv.version_name, pv.version_no) as programVersionName,
+               sem.semester_name as semesterName,
+               cls.class_name as className,
+               c.course_name as courseName,
+               t.task_code as taskCode,
+               obj.objective_code as objectiveCode,
+               obj.objective_name as objectiveName,
+               m.model_name as modelName,
+               r.attainment_rate as attainmentRate,
+               r.attainment_value as attainmentValue,
+               r.target_value as targetValue,
+               r.result_level as resultLevel,
+               r.locked_flag as lockedFlag,
+               r.calc_time as calcTime,
+               r.remark as remark
+        from eval_course_target_result r
+        inner join teaching_task t on t.id = r.task_id and t.is_deleted = 0
+        left join tr_program_version pv on pv.id = t.program_version_id and pv.is_deleted = 0
+        left join org_major maj on maj.id = pv.major_id and maj.is_deleted = 0
+        left join org_class cls on cls.id = t.class_id and cls.is_deleted = 0
+        left join edu_semester sem on sem.id = t.semester_id and sem.is_deleted = 0
+        left join edu_course c on c.id = t.course_id and c.is_deleted = 0
+        left join edu_course_objective obj on obj.id = r.objective_id and obj.is_deleted = 0
+        left join eval_model m on m.id = r.model_id and m.is_deleted = 0
+        <include refid="CourseTargetWhere"/>
+        order by r.calc_time desc, r.id desc
+    </select>
+
+    <select id="countGraduationRequirementDetails" resultType="long">
+        select count(1)
+        from eval_graduation_requirement_result r
+        inner join tr_program_version pv on pv.id = r.program_version_id and pv.is_deleted = 0
+        left join org_major maj on maj.id = pv.major_id and maj.is_deleted = 0
+        left join tr_graduation_requirement req on req.id = r.requirement_id and req.is_deleted = 0
+        left join eval_model m on m.id = r.model_id and m.is_deleted = 0
+        <include refid="GraduationWhere"/>
+    </select>
+
+    <select id="selectGraduationRequirementDetails" resultType="com.educationcertificationsystem.model.vo.eval.EvalDashboardGraduationRequirementDetailVO">
+        select r.id as resultId,
+               maj.major_name as majorName,
+               coalesce(pv.version_name, pv.version_no) as programVersionName,
+               req.requirement_code as requirementCode,
+               req.requirement_name as requirementName,
+               m.model_name as modelName,
+               r.attainment_rate as attainmentRate,
+               r.attainment_value as attainmentValue,
+               r.threshold_value as thresholdValue,
+               r.warning_flag as warningFlag,
+               r.lock_flag as lockFlag,
+               r.calc_time as calcTime,
+               r.remark as remark
+        from eval_graduation_requirement_result r
+        inner join tr_program_version pv on pv.id = r.program_version_id and pv.is_deleted = 0
+        left join org_major maj on maj.id = pv.major_id and maj.is_deleted = 0
+        left join tr_graduation_requirement req on req.id = r.requirement_id and req.is_deleted = 0
+        left join eval_model m on m.id = r.model_id and m.is_deleted = 0
+        <include refid="GraduationWhere"/>
+        order by r.warning_flag desc, r.calc_time desc, r.id desc
+        limit #{offset}, #{size}
+    </select>
+
+    <select id="selectAllGraduationRequirementDetails" resultType="com.educationcertificationsystem.model.vo.eval.EvalDashboardGraduationRequirementDetailVO">
+        select r.id as resultId,
+               maj.major_name as majorName,
+               coalesce(pv.version_name, pv.version_no) as programVersionName,
+               req.requirement_code as requirementCode,
+               req.requirement_name as requirementName,
+               m.model_name as modelName,
+               r.attainment_rate as attainmentRate,
+               r.attainment_value as attainmentValue,
+               r.threshold_value as thresholdValue,
+               r.warning_flag as warningFlag,
+               r.lock_flag as lockFlag,
+               r.calc_time as calcTime,
+               r.remark as remark
+        from eval_graduation_requirement_result r
+        inner join tr_program_version pv on pv.id = r.program_version_id and pv.is_deleted = 0
+        left join org_major maj on maj.id = pv.major_id and maj.is_deleted = 0
+        left join tr_graduation_requirement req on req.id = r.requirement_id and req.is_deleted = 0
+        left join eval_model m on m.id = r.model_id and m.is_deleted = 0
+        <include refid="GraduationWhere"/>
+        order by r.warning_flag desc, r.calc_time desc, r.id desc
+    </select>
+</mapper>
