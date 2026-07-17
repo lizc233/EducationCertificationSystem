@@ -10,4 +10,12 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface EvalRecalcJobService extends IService<EvalRecalcJob> {
 
+    EvalRecalcJob createJob(String jobType, String relationType, Long relationId, String remark);
+
+    EvalRecalcJob markRunning(Long jobId);
+
+    EvalRecalcJob markSuccess(Long jobId);
+
+    EvalRecalcJob markFailed(Long jobId, String errorMessage);
+
 }

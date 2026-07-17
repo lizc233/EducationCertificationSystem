@@ -2,6 +2,7 @@ package com.educationcertificationsystem.eval.service;
 
 import com.educationcertificationsystem.model.entity.EvalResultDetail;
 import com.baomidou.mybatisplus.extension.service.IService;
+import java.util.List;
 
 /**
 * @author Lizc233
@@ -9,5 +10,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
 * @createDate 2026-07-16 14:29:33
 */
 public interface EvalResultDetailService extends IService<EvalResultDetail> {
+
+    List<EvalResultDetail> listByResult(String resultType, Long resultId);
+
+    void replaceDetails(String resultType, Long resultId, List<EvalResultDetail> details);
 
 }
