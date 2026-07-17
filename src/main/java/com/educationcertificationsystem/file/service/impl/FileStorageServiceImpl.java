@@ -34,8 +34,12 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.HexFormat;
+import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -56,6 +60,9 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Value("${app.file-storage.max-size-bytes:104857600}")
     private long maxSizeBytes;
+
+    @Value("${app.file-storage.allowed-extensions:pdf,doc,docx,ppt,pptx,xls,xlsx,jpg,jpeg,png,zip,rar,txt}")
+    private String allowedExtensions;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -78,6 +85,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         Path root = storageRoot();
         String originalName = normalizeOriginalName(file.getOriginalFilename());
         String fileExt = StringUtils.getFilenameExtension(originalName);
+        validateFileExtension(fileExt);
         String storedName = buildStoredName(fileExt);
         Path target = root.resolve(storedName).normalize();
         if (!target.startsWith(root)) {
@@ -229,5 +237,22 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     private boolean hasText(String value) {
         return StringUtils.hasText(value);
+    }
+
+    private void validateFileExtension(String fileExt) {
+        if (!hasText(fileExt)) {
+            throw new IllegalArgumentException("文件缺少扩展名");
+        }
+        Set<String> extensionSet = Arrays.stream(allowedExtensions.split(","))
+                .map(String::trim)
+                .filter(StringUtils::hasText)
+                .map(item -> item.toLowerCase(Locale.ROOT))
+                .collect(Collectors.toSet());
+        if (extensionSet.isEmpty()) {
+            return;
+        }
+        if (!extensionSet.contains(fileExt.toLowerCase(Locale.ROOT))) {
+            throw new IllegalArgumentException("文件类型不支持: " + fileExt);
+        }
     }
 }
