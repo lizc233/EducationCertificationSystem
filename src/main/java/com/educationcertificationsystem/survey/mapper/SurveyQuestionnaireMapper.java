@@ -1,7 +1,10 @@
 package com.educationcertificationsystem.survey.mapper;
 
+import com.educationcertificationsystem.model.vo.survey.SurveyQuestionnairePageVO;
 import com.educationcertificationsystem.model.entity.SurveyQuestionnaire;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import java.util.List;
+import org.apache.ibatis.annotations.Param;
 
 /**
 * @author Lizc233
@@ -11,6 +14,17 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 */
 public interface SurveyQuestionnaireMapper extends BaseMapper<SurveyQuestionnaire> {
 
+    long countByCondition(@Param("publishStatus") String publishStatus,
+                          @Param("questionnaireType") String questionnaireType,
+                          @Param("targetObjectType") String targetObjectType,
+                          @Param("keyword") String keyword);
+
+    List<SurveyQuestionnairePageVO> selectPageByCondition(@Param("offset") long offset,
+                                                          @Param("size") long size,
+                                                          @Param("publishStatus") String publishStatus,
+                                                          @Param("questionnaireType") String questionnaireType,
+                                                          @Param("targetObjectType") String targetObjectType,
+                                                          @Param("keyword") String keyword);
 }
 
 
