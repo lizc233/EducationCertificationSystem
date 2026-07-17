@@ -21,9 +21,117 @@
             <result property="remark" column="remark" />
     </resultMap>
 
+    <resultMap id="PageResultMap" type="com.educationcertificationsystem.model.vo.eval.EvalGraduationRequirementResultPageVO">
+            <id property="id" column="id" />
+            <result property="programVersionId" column="program_version_id" />
+            <result property="programVersionName" column="program_version_name" />
+            <result property="majorId" column="major_id" />
+            <result property="majorName" column="major_name" />
+            <result property="requirementId" column="requirement_id" />
+            <result property="requirementCode" column="requirement_code" />
+            <result property="requirementName" column="requirement_name" />
+            <result property="modelId" column="model_id" />
+            <result property="modelName" column="model_name" />
+            <result property="attainmentRate" column="attainment_rate" />
+            <result property="attainmentValue" column="attainment_value" />
+            <result property="thresholdValue" column="threshold_value" />
+            <result property="warningFlag" column="warning_flag" />
+            <result property="calcTime" column="calc_time" />
+            <result property="lockFlag" column="lock_flag" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
     <sql id="Base_Column_List">
         id,program_version_id,requirement_id,model_id,attainment_rate,attainment_value,
         threshold_value,warning_flag,calc_time,lock_flag,created_at,
         updated_at,is_deleted,remark
     </sql>
+
+    <sql id="Page_Where">
+        where r.is_deleted = 0
+        <if test="programVersionId != null">
+            and r.program_version_id = #{programVersionId}
+        </if>
+        <if test="majorId != null">
+            and pv.major_id = #{majorId}
+        </if>
+        <if test="requirementId != null">
+            and r.requirement_id = #{requirementId}
+        </if>
+        <if test="modelId != null">
+            and r.model_id = #{modelId}
+        </if>
+        <if test="warningFlag != null">
+            and r.warning_flag = #{warningFlag}
+        </if>
+        <if test="lockFlag != null">
+            and r.lock_flag = #{lockFlag}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            and (
+                pv.version_name like concat('%', #{keyword}, '%')
+                or pv.version_no like concat('%', #{keyword}, '%')
+                or req.requirement_code like concat('%', #{keyword}, '%')
+                or req.requirement_name like concat('%', #{keyword}, '%')
+                or m.model_name like concat('%', #{keyword}, '%')
+                or maj.major_name like concat('%', #{keyword}, '%')
+            )
+        </if>
+    </sql>
+
+    <select id="selectActiveById" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from eval_graduation_requirement_result
+        where id = #{id}
+          and is_deleted = 0
+        limit 1
+    </select>
+
+    <select id="countByCondition" resultType="long">
+        select count(1)
+        from eval_graduation_requirement_result r
+        left join tr_program_version pv on pv.id = r.program_version_id
+        left join org_major maj on maj.id = pv.major_id
+        left join tr_graduation_requirement req on req.id = r.requirement_id
+        left join eval_model m on m.id = r.model_id
+        <include refid="Page_Where"/>
+    </select>
+
+    <select id="selectPageByCondition" resultMap="PageResultMap">
+        select r.id,
+               r.program_version_id,
+               coalesce(pv.version_name, pv.version_no) as program_version_name,
+               pv.major_id,
+               maj.major_name,
+               r.requirement_id,
+               req.requirement_code,
+               req.requirement_name,
+               r.model_id,
+               m.model_name,
+               r.attainment_rate,
+               r.attainment_value,
+               r.threshold_value,
+               r.warning_flag,
+               r.calc_time,
+               r.lock_flag,
+               r.remark
+        from eval_graduation_requirement_result r
+        left join tr_program_version pv on pv.id = r.program_version_id
+        left join org_major maj on maj.id = pv.major_id
+        left join tr_graduation_requirement req on req.id = r.requirement_id
+        left join eval_model m on m.id = r.model_id
+        <include refid="Page_Where"/>
+        order by r.warning_flag desc, r.calc_time desc, r.id desc
+        limit #{offset}, #{size}
+    </select>
+
+    <select id="selectByUnique" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from eval_graduation_requirement_result
+        where program_version_id = #{programVersionId}
+          and requirement_id = #{requirementId}
+          and model_id = #{modelId}
+          and is_deleted = 0
+        limit 1
+    </select>
 </mapper>
