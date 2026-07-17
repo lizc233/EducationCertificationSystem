@@ -2,6 +2,7 @@ package com.educationcertificationsystem.eval.mapper;
 
 import com.educationcertificationsystem.model.entity.EvalRecalcJob;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
 
 /**
 * @author Lizc233
@@ -10,6 +11,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @Entity com.educationcertificationsystem.model.entity.EvalRecalcJob
 */
 public interface EvalRecalcJobMapper extends BaseMapper<EvalRecalcJob> {
+
+    EvalRecalcJob selectActiveById(@Param("id") Long id);
 
 }
 

@@ -3,8 +3,10 @@ package com.educationcertificationsystem.notice.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.educationcertificationsystem.model.entity.NoticeRecipient;
+import com.educationcertificationsystem.model.vo.notice.NoticeInboxItem;
 import com.educationcertificationsystem.notice.mapper.NoticeRecipientMapper;
 import com.educationcertificationsystem.notice.service.NoticeRecipientService;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -53,6 +55,27 @@ public class NoticeRecipientServiceImpl extends ServiceImpl<NoticeRecipientMappe
     @Override
     public long countUnread(Long recipientUserId) {
         return baseMapper.countUnread(recipientUserId);
+    }
+
+    @Override
+    public Page<NoticeInboxItem> pageInbox(long pageNum, long pageSize, Long recipientUserId, Integer readStatus,
+                                           String noticeType, String title) {
+        long current = Math.max(pageNum, 1);
+        long size = Math.max(pageSize, 1);
+        long offset = (current - 1) * size;
+        long total = baseMapper.countInbox(recipientUserId, readStatus, noticeType, title);
+        List<NoticeInboxItem> records = total == 0
+                ? List.of()
+                : baseMapper.selectInbox(offset, size, recipientUserId, readStatus, noticeType, title);
+        Page<NoticeInboxItem> page = new Page<>(current, size);
+        page.setTotal(total);
+        page.setRecords(records);
+        return page;
+    }
+
+    @Override
+    public int markAllRead(Long recipientUserId) {
+        return baseMapper.markAllRead(recipientUserId, LocalDateTime.now());
     }
 
     @Override

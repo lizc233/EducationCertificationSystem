@@ -1,8 +1,9 @@
 package com.educationcertificationsystem.notice.service;
 
-import com.educationcertificationsystem.model.entity.NoticeMessage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.educationcertificationsystem.model.dto.notice.NoticeSendRequest;
+import com.educationcertificationsystem.model.entity.NoticeMessage;
 import java.util.List;
 
 /**
@@ -37,6 +38,13 @@ public interface NoticeMessageService extends IService<NoticeMessage> {
                                 List<Long> recipientUserIds,
                                 Long operatorUserId,
                                 String remark);
+
+    NoticeMessage retryPublish(Long noticeId,
+                               List<Long> recipientUserIds,
+                               Long operatorUserId,
+                               String remark);
+
+    NoticeMessage sendNotice(NoticeSendRequest request);
 
     void updatePublishStatus(Long noticeId, String publishStatus);
 }

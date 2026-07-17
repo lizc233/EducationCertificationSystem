@@ -2,6 +2,8 @@ package com.educationcertificationsystem.eval.mapper;
 
 import com.educationcertificationsystem.model.entity.EvalResultDetail;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import java.util.List;
+import org.apache.ibatis.annotations.Param;
 
 /**
 * @author Lizc233
@@ -10,6 +12,12 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @Entity com.educationcertificationsystem.model.entity.EvalResultDetail
 */
 public interface EvalResultDetailMapper extends BaseMapper<EvalResultDetail> {
+
+    List<EvalResultDetail> selectByResult(@Param("resultType") String resultType,
+                                          @Param("resultId") Long resultId);
+
+    int deleteByResult(@Param("resultType") String resultType,
+                       @Param("resultId") Long resultId);
 
 }
 

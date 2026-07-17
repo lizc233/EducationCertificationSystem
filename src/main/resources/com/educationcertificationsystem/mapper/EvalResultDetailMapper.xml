@@ -24,4 +24,19 @@
         source_value,contribution_value,remark,created_at,updated_at,
         is_deleted
     </sql>
+
+    <select id="selectByResult" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from eval_result_detail
+        where result_type = #{resultType}
+          and result_id = #{resultId}
+          and is_deleted = 0
+        order by id asc
+    </select>
+
+    <delete id="deleteByResult">
+        delete from eval_result_detail
+        where result_type = #{resultType}
+          and result_id = #{resultId}
+    </delete>
 </mapper>

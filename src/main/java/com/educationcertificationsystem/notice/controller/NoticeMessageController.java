@@ -4,12 +4,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.educationcertificationsystem.common.Result;
 import com.educationcertificationsystem.constant.NoticeMqConstants;
 import com.educationcertificationsystem.model.dto.notice.NoticePublishRequest;
+import com.educationcertificationsystem.model.dto.notice.NoticeSendRequest;
 import com.educationcertificationsystem.model.entity.NoticeMessage;
 import com.educationcertificationsystem.model.entity.SysUser;
 import com.educationcertificationsystem.notice.service.NoticeMessageService;
 import com.educationcertificationsystem.user.service.SysUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
@@ -85,6 +87,40 @@ public class NoticeMessageController {
         } catch (Exception ex) {
             log.error("发布通知失败, id={}", id, ex);
             return Result.error("发布失败");
+        }
+    }
+
+    @PostMapping("/send")
+    @Operation(summary = "快速发送站内通知")
+    public Result<NoticeMessage> send(@RequestBody NoticeSendRequest request) {
+        String error = validateForSend(request);
+        if (error != null) {
+            return Result.error(error);
+        }
+        try {
+            return Result.success(noticeMessageService.sendNotice(request));
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            return Result.error(ex.getMessage());
+        } catch (Exception ex) {
+            log.error("快速发送通知失败", ex);
+            return Result.error("发送失败");
+        }
+    }
+
+    @PostMapping("/{id}/retry-publish")
+    @Operation(summary = "重试发布通知")
+    public Result<NoticeMessage> retryPublish(@PathVariable Long id,
+                                              @RequestBody(required = false) NoticePublishRequest request) {
+        try {
+            List<Long> recipientUserIds = request == null ? null : request.getRecipientUserIds();
+            Long operatorUserId = request == null ? null : request.getOperatorUserId();
+            String remark = request == null ? null : request.getRemark();
+            return Result.success(noticeMessageService.retryPublish(id, recipientUserIds, operatorUserId, remark));
+        } catch (IllegalArgumentException | IllegalStateException ex) {
+            return Result.error(ex.getMessage());
+        } catch (Exception ex) {
+            log.error("重试发布通知失败, id={}", id, ex);
+            return Result.error("重试发布失败");
         }
     }
 
@@ -202,6 +238,28 @@ public class NoticeMessageController {
         }
         if (!StringUtils.hasText(request.getChannelType())) {
             return "发送渠道不能为空";
+        }
+        return null;
+    }
+
+    private String validateForSend(NoticeSendRequest request) {
+        if (request == null) {
+            return "请求体不能为空";
+        }
+        if (!StringUtils.hasText(request.getNoticeType())) {
+            return "通知类型不能为空";
+        }
+        if (!StringUtils.hasText(request.getTitle())) {
+            return "通知标题不能为空";
+        }
+        if (!StringUtils.hasText(request.getContent())) {
+            return "通知内容不能为空";
+        }
+        if (!StringUtils.hasText(request.getChannelType())) {
+            return "发送渠道不能为空";
+        }
+        if (request.getRecipientUserIds() == null || request.getRecipientUserIds().isEmpty()) {
+            return "接收人不能为空";
         }
         return null;
     }

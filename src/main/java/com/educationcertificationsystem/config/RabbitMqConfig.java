@@ -1,6 +1,7 @@
 package com.educationcertificationsystem.config;
 
 import com.educationcertificationsystem.constant.NoticeMqConstants;
+import com.educationcertificationsystem.constant.SurveyMqConstants;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
@@ -23,8 +24,18 @@ public class RabbitMqConfig {
     }
 
     @Bean
+    public TopicExchange surveyExchange() {
+        return new TopicExchange(SurveyMqConstants.SURVEY_EXCHANGE, true, false);
+    }
+
+    @Bean
     public Queue noticeQueue() {
         return new Queue(NoticeMqConstants.NOTICE_QUEUE, true);
+    }
+
+    @Bean
+    public Queue surveyQueue() {
+        return new Queue(SurveyMqConstants.SURVEY_QUEUE, true);
     }
 
     @Bean
@@ -32,6 +43,13 @@ public class RabbitMqConfig {
         return BindingBuilder.bind(noticeQueue)
                 .to(noticeExchange)
                 .with(NoticeMqConstants.NOTICE_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding surveyBinding(Queue surveyQueue, TopicExchange surveyExchange) {
+        return BindingBuilder.bind(surveyQueue)
+                .to(surveyExchange)
+                .with(SurveyMqConstants.SURVEY_ROUTING_KEY);
     }
 
     @Bean

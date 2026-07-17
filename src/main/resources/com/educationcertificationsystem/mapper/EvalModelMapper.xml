@@ -21,9 +21,141 @@
             <result property="remark" column="remark" />
     </resultMap>
 
+    <resultMap id="PageResultMap" type="com.educationcertificationsystem.model.vo.eval.EvalModelPageItemVO">
+            <id property="id" column="id" />
+            <result property="modelCode" column="model_code" />
+            <result property="modelName" column="model_name" />
+            <result property="modelType" column="model_type" />
+            <result property="scopeType" column="scope_type" />
+            <result property="formulaExpression" column="formula_expression" />
+            <result property="thresholdValue" column="threshold_value" />
+            <result property="includeQuestionnaireFlag" column="include_questionnaire_flag" />
+            <result property="enabled" column="enabled" />
+            <result property="status" column="status" />
+            <result property="itemCount" column="item_count" />
+            <result property="scopeCount" column="scope_count" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
     <sql id="Base_Column_List">
         id,model_code,model_name,model_type,scope_type,formula_expression,
         threshold_value,include_questionnaire_flag,enabled,status,created_at,
         updated_at,is_deleted,remark
     </sql>
+
+    <sql id="EvalModel_Where">
+        where is_deleted = 0
+        <if test="modelType != null and modelType != ''">
+            and model_type = #{modelType}
+        </if>
+        <if test="scopeType != null and scopeType != ''">
+            and scope_type = #{scopeType}
+        </if>
+        <if test="status != null and status != ''">
+            and status = #{status}
+        </if>
+        <if test="enabled != null">
+            and enabled = #{enabled}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            and (
+                model_code like concat('%', #{keyword}, '%')
+                or model_name like concat('%', #{keyword}, '%')
+                or remark like concat('%', #{keyword}, '%')
+            )
+        </if>
+    </sql>
+
+    <select id="selectActiveById" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from eval_model
+        where id = #{id}
+          and is_deleted = 0
+        limit 1
+    </select>
+
+    <select id="countByCondition" resultType="long">
+        select count(1)
+        from eval_model
+        <include refid="EvalModel_Where"/>
+    </select>
+
+    <select id="selectPageByCondition" resultMap="PageResultMap">
+        select m.id,
+               m.model_code,
+               m.model_name,
+               m.model_type,
+               m.scope_type,
+               m.formula_expression,
+               m.threshold_value,
+               m.include_questionnaire_flag,
+               m.enabled,
+               m.status,
+               m.created_at,
+               m.updated_at,
+               m.remark,
+               (
+                   select count(1)
+                   from eval_model_item i
+                   where i.model_id = m.id
+                     and i.is_deleted = 0
+               ) as item_count,
+               (
+                   select count(1)
+                   from eval_model_scope s
+                   where s.model_id = m.id
+                     and s.is_deleted = 0
+               ) as scope_count
+        from eval_model m
+        where m.is_deleted = 0
+        <if test="modelType != null and modelType != ''">
+            and m.model_type = #{modelType}
+        </if>
+        <if test="scopeType != null and scopeType != ''">
+            and m.scope_type = #{scopeType}
+        </if>
+        <if test="status != null and status != ''">
+            and m.status = #{status}
+        </if>
+        <if test="enabled != null">
+            and m.enabled = #{enabled}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            and (
+                m.model_code like concat('%', #{keyword}, '%')
+                or m.model_name like concat('%', #{keyword}, '%')
+                or m.remark like concat('%', #{keyword}, '%')
+            )
+        </if>
+        order by m.id desc
+        limit #{offset}, #{size}
+    </select>
+
+    <select id="countByModelCode" resultType="long">
+        select count(1)
+        from eval_model
+        where model_code = #{modelCode}
+          and is_deleted = 0
+        <if test="excludeId != null">
+            and id != #{excludeId}
+        </if>
+    </select>
+
+    <select id="countResultReferences" resultType="long">
+        select
+            (
+                select count(1)
+                from eval_course_target_result
+                where model_id = #{modelId}
+                  and is_deleted = 0
+            ) +
+            (
+                select count(1)
+                from eval_graduation_requirement_result
+                where model_id = #{modelId}
+                  and is_deleted = 0
+            )
+    </select>
 </mapper>

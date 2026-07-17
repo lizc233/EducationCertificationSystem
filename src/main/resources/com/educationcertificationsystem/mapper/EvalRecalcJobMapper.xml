@@ -27,4 +27,12 @@
         retry_count,error_message,queued_at,started_at,finished_at,
         created_at,updated_at,is_deleted,remark
     </sql>
+
+    <select id="selectActiveById" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from eval_recalc_job
+        where id = #{id}
+          and is_deleted = 0
+        limit 1
+    </select>
 </mapper>

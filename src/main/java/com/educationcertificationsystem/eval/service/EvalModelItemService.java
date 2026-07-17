@@ -1,7 +1,8 @@
 package com.educationcertificationsystem.eval.service;
 
-import com.educationcertificationsystem.model.entity.EvalModelItem;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.educationcertificationsystem.model.entity.EvalModelItem;
+import java.util.List;
 
 /**
 * @author Lizc233
@@ -9,5 +10,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
 * @createDate 2026-07-16 14:29:33
 */
 public interface EvalModelItemService extends IService<EvalModelItem> {
+
+    List<EvalModelItem> listActiveByModelId(Long modelId);
+
+    void replaceModelItems(Long modelId, List<EvalModelItem> items);
 
 }

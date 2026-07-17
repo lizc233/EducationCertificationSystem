@@ -28,4 +28,96 @@
         target_object_id,anonymous_flag,publish_status,start_time,end_time,
         mq_status,created_at,updated_at,is_deleted,remark
     </sql>
+
+    <sql id="Condition_Where">
+        where q.is_deleted = 0
+        <if test="publishStatus != null and publishStatus != ''">
+            and q.publish_status = #{publishStatus}
+        </if>
+        <if test="questionnaireType != null and questionnaireType != ''">
+            and q.questionnaire_type = #{questionnaireType}
+        </if>
+        <if test="targetObjectType != null and targetObjectType != ''">
+            and q.target_object_type = #{targetObjectType}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            and (
+                q.questionnaire_code like concat('%', #{keyword}, '%')
+                or q.title like concat('%', #{keyword}, '%')
+                or q.subtitle like concat('%', #{keyword}, '%')
+            )
+        </if>
+    </sql>
+
+    <select id="countByCondition" resultType="long">
+        select count(1)
+        from survey_questionnaire q
+        <include refid="Condition_Where"/>
+    </select>
+
+    <select id="selectPageByCondition" resultType="com.educationcertificationsystem.model.vo.survey.SurveyQuestionnairePageVO">
+        select q.id,
+               q.questionnaire_code as questionnaireCode,
+               q.title,
+               q.subtitle,
+               q.questionnaire_type as questionnaireType,
+               q.target_object_type as targetObjectType,
+               q.target_object_id as targetObjectId,
+               q.anonymous_flag as anonymousFlag,
+               q.publish_status as publishStatus,
+               q.mq_status as mqStatus,
+               q.start_time as startTime,
+               q.end_time as endTime,
+               (
+                   select count(1)
+                   from survey_question sq
+                   where sq.questionnaire_id = q.id
+                     and sq.is_deleted = 0
+               ) as questionCount,
+               (
+                   select count(1)
+                   from survey_questionnaire_scope sqs
+                   where sqs.questionnaire_id = q.id
+                     and sqs.is_deleted = 0
+               ) as scopeCount,
+               (
+                   select spt.publish_batch_no
+                   from survey_publish_task spt
+                   where spt.questionnaire_id = q.id
+                     and spt.is_deleted = 0
+                   order by spt.created_at desc, spt.id desc
+                   limit 1
+               ) as latestPublishBatchNo,
+               (
+                   select spt.publish_status
+                   from survey_publish_task spt
+                   where spt.questionnaire_id = q.id
+                     and spt.is_deleted = 0
+                   order by spt.created_at desc, spt.id desc
+                   limit 1
+               ) as latestTaskStatus,
+               (
+                   select spt.mq_status
+                   from survey_publish_task spt
+                   where spt.questionnaire_id = q.id
+                     and spt.is_deleted = 0
+                   order by spt.created_at desc, spt.id desc
+                   limit 1
+               ) as latestTaskMqStatus,
+               (
+                   select spt.published_at
+                   from survey_publish_task spt
+                   where spt.questionnaire_id = q.id
+                     and spt.is_deleted = 0
+                   order by spt.created_at desc, spt.id desc
+                   limit 1
+               ) as latestPublishedAt,
+               q.created_at as createdAt,
+               q.updated_at as updatedAt,
+               q.remark
+        from survey_questionnaire q
+        <include refid="Condition_Where"/>
+        order by q.updated_at desc, q.id desc
+        limit #{offset}, #{size}
+    </select>
 </mapper>

@@ -26,4 +26,17 @@
         threshold_value,calc_rule,sort_no,enabled,created_at,
         updated_at,is_deleted,remark
     </sql>
+
+    <select id="selectActiveByModelId" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from eval_model_item
+        where model_id = #{modelId}
+          and is_deleted = 0
+        order by sort_no asc, id asc
+    </select>
+
+    <delete id="deleteByModelId">
+        delete from eval_model_item
+        where model_id = #{modelId}
+    </delete>
 </mapper>

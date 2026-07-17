@@ -47,11 +47,21 @@ public class NoticePushLogServiceImpl extends ServiceImpl<NoticePushLogMapper, N
 
     @Override
     public NoticePushLog createPendingLog(Long noticeId, String mqTopic, String mqKey, String remark) {
+        return createLog(noticeId, mqTopic, mqKey, remark, 0);
+    }
+
+    @Override
+    public NoticePushLog createRetryLog(Long noticeId, String mqTopic, String mqKey, String remark) {
+        int currentRetryCount = baseMapper.selectMaxRetryCount(noticeId);
+        return createLog(noticeId, mqTopic, mqKey, remark, currentRetryCount + 1);
+    }
+
+    private NoticePushLog createLog(Long noticeId, String mqTopic, String mqKey, String remark, int retryCount) {
         NoticePushLog log = new NoticePushLog();
         log.setNoticeId(noticeId);
         log.setMqTopic(mqTopic);
         log.setMqKey(mqKey);
-        log.setRetryCount(0);
+        log.setRetryCount(retryCount);
         log.setSendStatus(NoticeMqConstants.PUSH_STATUS_WAITING);
         log.setRemark(remark);
         save(log);

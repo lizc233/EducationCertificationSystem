@@ -5,16 +5,37 @@
 <mapper namespace="com.educationcertificationsystem.notice.mapper.NoticeRecipientMapper">
 
     <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.NoticeRecipient">
-            <id property="id" column="id" />
-            <result property="noticeId" column="notice_id" />
-            <result property="recipientUserId" column="recipient_user_id" />
-            <result property="readStatus" column="read_status" />
-            <result property="readAt" column="read_at" />
-            <result property="deletedFlag" column="deleted_flag" />
-            <result property="createdAt" column="created_at" />
-            <result property="updatedAt" column="updated_at" />
-            <result property="isDeleted" column="is_deleted" />
-            <result property="remark" column="remark" />
+        <id property="id" column="id" />
+        <result property="noticeId" column="notice_id" />
+        <result property="recipientUserId" column="recipient_user_id" />
+        <result property="readStatus" column="read_status" />
+        <result property="readAt" column="read_at" />
+        <result property="deletedFlag" column="deleted_flag" />
+        <result property="createdAt" column="created_at" />
+        <result property="updatedAt" column="updated_at" />
+        <result property="isDeleted" column="is_deleted" />
+        <result property="remark" column="remark" />
+    </resultMap>
+
+    <resultMap id="InboxResultMap" type="com.educationcertificationsystem.model.vo.notice.NoticeInboxItem">
+        <id property="recipientId" column="recipient_id" />
+        <result property="noticeId" column="notice_id" />
+        <result property="recipientUserId" column="recipient_user_id" />
+        <result property="readStatus" column="read_status" />
+        <result property="readAt" column="read_at" />
+        <result property="recipientCreatedAt" column="recipient_created_at" />
+        <result property="noticeType" column="notice_type" />
+        <result property="title" column="title" />
+        <result property="content" column="content" />
+        <result property="senderUserId" column="sender_user_id" />
+        <result property="bizType" column="biz_type" />
+        <result property="bizId" column="biz_id" />
+        <result property="channelType" column="channel_type" />
+        <result property="priorityLevel" column="priority_level" />
+        <result property="publishStatus" column="publish_status" />
+        <result property="sendAt" column="send_at" />
+        <result property="expireAt" column="expire_at" />
+        <result property="remark" column="remark" />
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -68,6 +89,25 @@
           and read_status = 0
     </select>
 
+    <select id="countInbox" resultType="long">
+        select count(1)
+        from notice_recipient nr
+        inner join notice_message nm on nm.id = nr.notice_id
+        where nr.is_deleted = 0
+          and nr.deleted_flag = 0
+          and nm.is_deleted = 0
+          and nr.recipient_user_id = #{recipientUserId}
+        <if test="readStatus != null">
+            and nr.read_status = #{readStatus}
+        </if>
+        <if test="noticeType != null and noticeType != ''">
+            and nm.notice_type = #{noticeType}
+        </if>
+        <if test="title != null and title != ''">
+            and nm.title like concat('%', #{title}, '%')
+        </if>
+    </select>
+
     <select id="selectByCondition" resultMap="BaseResultMap">
         select <include refid="Base_Column_List"/>
         from notice_recipient
@@ -75,6 +115,55 @@
         order by id desc
         limit #{offset}, #{size}
     </select>
+
+    <select id="selectInbox" resultMap="InboxResultMap">
+        select nr.id as recipient_id,
+               nr.notice_id,
+               nr.recipient_user_id,
+               nr.read_status,
+               nr.read_at,
+               nr.created_at as recipient_created_at,
+               nm.notice_type,
+               nm.title,
+               nm.content,
+               nm.sender_user_id,
+               nm.biz_type,
+               nm.biz_id,
+               nm.channel_type,
+               nm.priority_level,
+               nm.publish_status,
+               nm.send_at,
+               nm.expire_at,
+               coalesce(nr.remark, nm.remark) as remark
+        from notice_recipient nr
+        inner join notice_message nm on nm.id = nr.notice_id
+        where nr.is_deleted = 0
+          and nr.deleted_flag = 0
+          and nm.is_deleted = 0
+          and nr.recipient_user_id = #{recipientUserId}
+        <if test="readStatus != null">
+            and nr.read_status = #{readStatus}
+        </if>
+        <if test="noticeType != null and noticeType != ''">
+            and nm.notice_type = #{noticeType}
+        </if>
+        <if test="title != null and title != ''">
+            and nm.title like concat('%', #{title}, '%')
+        </if>
+        order by case when nr.read_status = 0 then 0 else 1 end asc,
+                 nr.id desc
+        limit #{offset}, #{size}
+    </select>
+
+    <update id="markAllRead">
+        update notice_recipient
+        set read_status = 1,
+            read_at = #{readAt}
+        where is_deleted = 0
+          and deleted_flag = 0
+          and recipient_user_id = #{recipientUserId}
+          and read_status = 0
+    </update>
 
     <insert id="batchInsertIgnore">
         insert ignore into notice_recipient (

@@ -19,4 +19,17 @@
         id,model_id,scope_type,scope_id,created_at,updated_at,
         is_deleted,remark
     </sql>
+
+    <select id="selectActiveByModelId" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from eval_model_scope
+        where model_id = #{modelId}
+          and is_deleted = 0
+        order by id asc
+    </select>
+
+    <delete id="deleteByModelId">
+        delete from eval_model_scope
+        where model_id = #{modelId}
+    </delete>
 </mapper>

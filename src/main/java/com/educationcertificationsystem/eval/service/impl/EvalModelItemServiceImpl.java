@@ -1,10 +1,13 @@
 package com.educationcertificationsystem.eval.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.educationcertificationsystem.model.entity.EvalModelItem;
-import com.educationcertificationsystem.eval.service.EvalModelItemService;
 import com.educationcertificationsystem.eval.mapper.EvalModelItemMapper;
+import com.educationcertificationsystem.eval.service.EvalModelItemService;
+import com.educationcertificationsystem.model.entity.EvalModelItem;
+import com.educationcertificationsystem.support.EntityAuditSupport;
+import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
 * @author Lizc233
@@ -15,6 +18,24 @@ import org.springframework.stereotype.Service;
 public class EvalModelItemServiceImpl extends ServiceImpl<EvalModelItemMapper, EvalModelItem>
     implements EvalModelItemService{
 
+    @Override
+    public List<EvalModelItem> listActiveByModelId(Long modelId) {
+        return baseMapper.selectActiveByModelId(modelId);
+    }
+
+    @Override
+    @Transactional
+    public void replaceModelItems(Long modelId, List<EvalModelItem> items) {
+        baseMapper.deleteByModelId(modelId);
+        if (items == null || items.isEmpty()) {
+            return;
+        }
+        for (EvalModelItem item : items) {
+            item.setModelId(modelId);
+            EntityAuditSupport.touchCreate(item);
+        }
+        saveBatch(items);
+    }
 }
 
 
