@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://host.docker.internal:3306/education_certification_system?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf-8&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    username: root
+    password: Lizc20041020
+  rabbitmq:
+    host: rabbitmq
