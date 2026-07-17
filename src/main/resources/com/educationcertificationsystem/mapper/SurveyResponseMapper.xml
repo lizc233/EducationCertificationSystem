@@ -25,4 +25,51 @@
         submit_status,submitted_at,ip_address,created_at,updated_at,
         is_deleted,remark
     </sql>
+
+    <sql id="Condition_Where">
+        where r.is_deleted = 0
+          and r.questionnaire_id = #{questionnaireId}
+        <if test="respondentType != null and respondentType != ''">
+            and r.respondent_type = #{respondentType}
+        </if>
+        <if test="submitStatus != null and submitStatus != ''">
+            and r.submit_status = #{submitStatus}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            and (
+                r.respondent_name like concat('%', #{keyword}, '%')
+                or r.response_token like concat('%', #{keyword}, '%')
+                or r.ip_address like concat('%', #{keyword}, '%')
+            )
+        </if>
+    </sql>
+
+    <select id="countByCondition" resultType="long">
+        select count(1)
+        from survey_response r
+        <include refid="Condition_Where"/>
+    </select>
+
+    <select id="selectPageByCondition" resultType="com.educationcertificationsystem.model.vo.survey.SurveyResponsePageVO">
+        select r.id,
+               r.questionnaire_id as questionnaireId,
+               r.respondent_user_id as respondentUserId,
+               r.respondent_name as respondentName,
+               r.respondent_type as respondentType,
+               r.response_token as responseToken,
+               r.submit_status as submitStatus,
+               r.submitted_at as submittedAt,
+               r.ip_address as ipAddress,
+               (
+                   select count(1)
+                   from survey_response_answer a
+                   where a.response_id = r.id
+                     and a.is_deleted = 0
+               ) as answerCount,
+               r.remark
+        from survey_response r
+        <include refid="Condition_Where"/>
+        order by r.submitted_at desc, r.id desc
+        limit #{offset}, #{size}
+    </select>
 </mapper>

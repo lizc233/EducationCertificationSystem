@@ -6,6 +6,7 @@ import com.educationcertificationsystem.model.dto.survey.SurveyDispatchRequest;
 import com.educationcertificationsystem.model.dto.survey.SurveyPublishEvent;
 import com.educationcertificationsystem.model.dto.survey.SurveyQuestionnaireSaveRequest;
 import com.educationcertificationsystem.model.entity.SurveyQuestionnaire;
+import java.util.List;
 import com.educationcertificationsystem.model.vo.survey.SurveyPublishTaskVO;
 import com.educationcertificationsystem.model.vo.survey.SurveyQuestionnaireDetailVO;
 import com.educationcertificationsystem.model.vo.survey.SurveyQuestionnairePageVO;
@@ -47,4 +48,8 @@ public interface SurveyQuestionnaireService extends IService<SurveyQuestionnaire
     Page<SurveyPublishTaskVO> pagePublishTasks(Long questionnaireId, long pageNum, long pageSize);
 
     void handlePublishEvent(SurveyPublishEvent event);
+
+    SurveyQuestionnaire getActiveQuestionnaireEntity(Long id);
+
+    List<Long> resolveTargetUserIds(Long questionnaireId);
 }

@@ -329,6 +329,17 @@ public class SurveyQuestionnaireServiceImpl extends ServiceImpl<SurveyQuestionna
         }
     }
 
+    @Override
+    public SurveyQuestionnaire getActiveQuestionnaireEntity(Long id) {
+        return getActiveQuestionnaire(id);
+    }
+
+    @Override
+    public List<Long> resolveTargetUserIds(Long questionnaireId) {
+        SurveyQuestionnaire questionnaire = getRequiredQuestionnaire(questionnaireId);
+        return resolveRecipientUserIds(questionnaire);
+    }
+
     private SurveyQuestionnaire createTaskAndDispatch(SurveyQuestionnaire questionnaire,
                                                       String actionType,
                                                       SurveyDispatchRequest request) {
