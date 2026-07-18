@@ -303,25 +303,14 @@ public class SurveyQuestionnaireServiceImpl extends ServiceImpl<SurveyQuestionna
         try {
             List<Long> recipientUserIds = resolveRecipientUserIds(questionnaire);
             if (recipientUserIds.isEmpty()) {
-                throw new IllegalStateException("No recipient users matched the current questionnaire scope");
+                log.warn("Survey publish has no matched recipients, questionnaireId={}, actionType={}",
+                        questionnaire.getId(), event.getActionType());
+                markTaskPublished(task, questionnaire, event.getActionType());
+                return;
             }
             NoticeSendRequest noticeRequest = buildNoticeRequest(questionnaire, event, recipientUserIds);
             noticeMessageService.sendNotice(noticeRequest);
-            task.setMqStatus(SurveyMqConstants.MQ_STATUS_CONSUMED);
-            task.setPublishedAt(LocalDateTime.now());
-            task.setErrorMessage(null);
-            task.setPublishStatus(isRemindAction(event.getActionType())
-                    ? SurveyMqConstants.TASK_STATUS_REMINDED
-                    : SurveyMqConstants.TASK_STATUS_PUBLISHED);
-            EntityAuditSupport.touchUpdate(task);
-            surveyPublishTaskService.updateById(task);
-
-            questionnaire.setMqStatus(SurveyMqConstants.MQ_STATUS_CONSUMED);
-            if (!isRemindAction(event.getActionType())) {
-                questionnaire.setPublishStatus(SurveyMqConstants.QUESTIONNAIRE_STATUS_PUBLISHED);
-            }
-            EntityAuditSupport.touchUpdate(questionnaire);
-            updateById(questionnaire);
+            markTaskPublished(task, questionnaire, event.getActionType());
         } catch (Exception ex) {
             log.error("Handle survey publish event failed, taskId={}, questionnaireId={}",
                     event.getTaskId(), event.getQuestionnaireId(), ex);
@@ -444,6 +433,26 @@ public class SurveyQuestionnaireServiceImpl extends ServiceImpl<SurveyQuestionna
         updateById(questionnaire);
     }
 
+    private void markTaskPublished(SurveyPublishTask task,
+                                   SurveyQuestionnaire questionnaire,
+                                   String actionType) {
+        task.setMqStatus(SurveyMqConstants.MQ_STATUS_CONSUMED);
+        task.setPublishedAt(LocalDateTime.now());
+        task.setErrorMessage(null);
+        task.setPublishStatus(isRemindAction(actionType)
+                ? SurveyMqConstants.TASK_STATUS_REMINDED
+                : SurveyMqConstants.TASK_STATUS_PUBLISHED);
+        EntityAuditSupport.touchUpdate(task);
+        surveyPublishTaskService.updateById(task);
+
+        questionnaire.setMqStatus(SurveyMqConstants.MQ_STATUS_CONSUMED);
+        if (!isRemindAction(actionType)) {
+            questionnaire.setPublishStatus(SurveyMqConstants.QUESTIONNAIRE_STATUS_PUBLISHED);
+        }
+        EntityAuditSupport.touchUpdate(questionnaire);
+        updateById(questionnaire);
+    }
+
     private NoticeSendRequest buildNoticeRequest(SurveyQuestionnaire questionnaire,
                                                  SurveyPublishEvent event,
                                                  List<Long> recipientUserIds) {
@@ -497,6 +506,9 @@ public class SurveyQuestionnaireServiceImpl extends ServiceImpl<SurveyQuestionna
         if (filtered.isEmpty() && TARGET_EMPLOYER.equalsIgnoreCase(normalizeEnum(questionnaire.getTargetObjectType()))) {
             filtered.addAll(userIds);
         }
+        if (filtered.isEmpty() && scopes.isEmpty()) {
+            filtered.addAll(resolveUsersByTargetRoleFallback(questionnaire.getTargetObjectType()));
+        }
         if (filtered.isEmpty()) {
             return List.of();
         }
@@ -529,6 +541,60 @@ public class SurveyQuestionnaireServiceImpl extends ServiceImpl<SurveyQuestionna
                     .toList();
             default -> List.of();
         };
+    }
+
+    private Collection<Long> resolveUsersByTargetRoleFallback(String targetObjectType) {
+        String target = normalizeEnum(targetObjectType);
+        if (TARGET_STUDENT.equals(target) || TARGET_IN_SCHOOL.equals(target) || TARGET_GRADUATE.equals(target)) {
+            return listActiveUserIdsByRoleKeyword("STUDENT", "学生");
+        }
+        if (TARGET_TEACHER.equals(target)) {
+            return listActiveUserIdsByRoleKeyword("TEACHER", "教师");
+        }
+        if (TARGET_ALL.equals(target)) {
+            return sysUserService.list(new LambdaQueryWrapper<SysUser>()
+                            .eq(SysUser::getIsDeleted, 0))
+                    .stream()
+                    .map(SysUser::getId)
+                    .filter(Objects::nonNull)
+                    .toList();
+        }
+        return List.of();
+    }
+
+    private List<Long> listActiveUserIdsByRoleKeyword(String keywordEn, String keywordZh) {
+        Set<Long> roleIds = sysRoleService.list(new LambdaQueryWrapper<SysRole>()
+                        .eq(SysRole::getIsDeleted, 0))
+                .stream()
+                .filter(role -> containsRoleKeyword(role, keywordEn, keywordZh))
+                .map(SysRole::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (roleIds.isEmpty()) {
+            return List.of();
+        }
+        return sysUserRoleService.list(new LambdaQueryWrapper<SysUserRole>()
+                        .in(SysUserRole::getRoleId, roleIds)
+                        .eq(SysUserRole::getIsDeleted, 0))
+                .stream()
+                .map(SysUserRole::getUserId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+    }
+
+    private boolean containsRoleKeyword(SysRole role, String keywordEn, String keywordZh) {
+        return containsKeyword(role.getRoleCode(), keywordEn, keywordZh)
+                || containsKeyword(role.getRoleName(), keywordEn, keywordZh)
+                || containsKeyword(role.getRoleType(), keywordEn, keywordZh);
+    }
+
+    private boolean containsKeyword(String value, String keywordEn, String keywordZh) {
+        if (!StringUtils.hasText(value)) {
+            return false;
+        }
+        String normalized = value.trim().toUpperCase(Locale.ROOT);
+        return normalized.contains(keywordEn) || value.contains(keywordZh);
     }
 
     private Collection<Long> resolveUsersByScope(SurveyQuestionnaireScope scope) {
@@ -927,7 +993,7 @@ public class SurveyQuestionnaireServiceImpl extends ServiceImpl<SurveyQuestionna
     }
 
     private void replaceScopes(Long questionnaireId, List<SurveyQuestionnaireScopeRequest> scopes) {
-        markScopesDeleted(questionnaireId);
+        purgeScopes(questionnaireId);
         if (scopes == null || scopes.isEmpty()) {
             return;
         }
@@ -943,7 +1009,7 @@ public class SurveyQuestionnaireServiceImpl extends ServiceImpl<SurveyQuestionna
     }
 
     private void replaceQuestions(Long questionnaireId, List<SurveyQuestionItemRequest> questions) {
-        markQuestionsDeleted(questionnaireId);
+        purgeQuestions(questionnaireId);
         if (questions == null || questions.isEmpty()) {
             return;
         }
@@ -967,6 +1033,30 @@ public class SurveyQuestionnaireServiceImpl extends ServiceImpl<SurveyQuestionna
             surveyQuestionService.save(question);
             saveQuestionChildren(question.getId(), questionRequest);
         }
+    }
+
+    private void purgeScopes(Long questionnaireId) {
+        surveyQuestionnaireScopeService.remove(new LambdaQueryWrapper<SurveyQuestionnaireScope>()
+                .eq(SurveyQuestionnaireScope::getQuestionnaireId, questionnaireId));
+    }
+
+    private void purgeQuestions(Long questionnaireId) {
+        List<Long> questionIds = surveyQuestionService.list(new LambdaQueryWrapper<SurveyQuestion>()
+                        .eq(SurveyQuestion::getQuestionnaireId, questionnaireId))
+                .stream()
+                .map(SurveyQuestion::getId)
+                .filter(Objects::nonNull)
+                .toList();
+        if (!questionIds.isEmpty()) {
+            surveyQuestionOptionService.remove(new LambdaQueryWrapper<SurveyQuestionOption>()
+                    .in(SurveyQuestionOption::getQuestionId, questionIds));
+            surveyQuestionMatrixRowService.remove(new LambdaQueryWrapper<SurveyQuestionMatrixRow>()
+                    .in(SurveyQuestionMatrixRow::getQuestionId, questionIds));
+            surveyQuestionMatrixColumnService.remove(new LambdaQueryWrapper<SurveyQuestionMatrixColumn>()
+                    .in(SurveyQuestionMatrixColumn::getQuestionId, questionIds));
+        }
+        surveyQuestionService.remove(new LambdaQueryWrapper<SurveyQuestion>()
+                .eq(SurveyQuestion::getQuestionnaireId, questionnaireId));
     }
 
     private void saveQuestionChildren(Long questionId, SurveyQuestionItemRequest request) {

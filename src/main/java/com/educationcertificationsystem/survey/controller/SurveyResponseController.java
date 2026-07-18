@@ -26,7 +26,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -59,7 +58,6 @@ public class SurveyResponseController {
     }
 
     @PostMapping("/responses/submit")
-    @Transactional
     @Operation(summary = "Submit questionnaire")
     public Result<SurveyResponse> submit(@PathVariable Long questionnaireId,
                                          @RequestBody SurveySubmitRequest request) {
