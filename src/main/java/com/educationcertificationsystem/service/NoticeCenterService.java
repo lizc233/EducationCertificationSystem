@@ -50,8 +50,8 @@ public class NoticeCenterService {
         String noticeType,
         String title
     ) {
-        ensureReady();
         assertAccess(recipientUserId);
+        ensureReady();
 
         List<NoticeRecipient> recipients = noticeRecipientMapper.selectList(new LambdaQueryWrapper<NoticeRecipient>()
             .eq(NoticeRecipient::getRecipientUserId, recipientUserId)
@@ -91,8 +91,8 @@ public class NoticeCenterService {
     }
 
     public long unreadCount(Long recipientUserId) {
-        ensureReady();
         assertAccess(recipientUserId);
+        ensureReady();
         return noticeRecipientMapper.selectCount(new LambdaQueryWrapper<NoticeRecipient>()
             .eq(NoticeRecipient::getRecipientUserId, recipientUserId)
             .eq(NoticeRecipient::getReadStatus, 0)
@@ -114,8 +114,8 @@ public class NoticeCenterService {
     }
 
     public void markAllRead(Long recipientUserId) {
-        ensureReady();
         assertAccess(recipientUserId);
+        ensureReady();
         List<NoticeRecipient> recipients = noticeRecipientMapper.selectList(new LambdaQueryWrapper<NoticeRecipient>()
             .eq(NoticeRecipient::getRecipientUserId, recipientUserId)
             .eq(NoticeRecipient::getReadStatus, 0)
@@ -188,110 +188,8 @@ public class NoticeCenterService {
                     CONSTRAINT fk_notice_recipient_user FOREIGN KEY (recipient_user_id) REFERENCES sys_user(id)
                 )
                 """);
-            seedDevData();
             initialized.set(true);
         }
-    }
-
-    private void seedDevData() {
-        long count = noticeMessageMapper.selectCount(new LambdaQueryWrapper<NoticeMessage>().eq(NoticeMessage::getIsDeleted, 0));
-        if (count > 0) {
-            return;
-        }
-        LocalDateTime now = LocalDateTime.now();
-
-        NoticeMessage surveyNotice = createNotice(
-            "SURVEY",
-            "课程反馈问卷已发布",
-            "2026 春季课程教学反馈问卷已开放填写，请在截止前完成提交。",
-            1L,
-            "SURVEY",
-            1001L,
-            "INTERNAL",
-            now.minusHours(6),
-            now.plusDays(7)
-        );
-        noticeMessageMapper.insert(surveyNotice);
-
-        NoticeMessage reportNotice = createNotice(
-            "REPORT_TASK",
-            "自评报告章节待补充",
-            "你负责的报告章节存在未完成内容，请尽快补充材料并提交。",
-            1L,
-            "REPORT",
-            2001L,
-            "INTERNAL",
-            now.minusHours(3),
-            now.plusDays(5)
-        );
-        noticeMessageMapper.insert(reportNotice);
-
-        NoticeMessage systemNotice = createNotice(
-            "SYSTEM",
-            "系统维护通知",
-            "平台将在本周日晚进行短时维护，期间部分功能可能不可用。",
-            1L,
-            "SYSTEM",
-            0L,
-            "INTERNAL",
-            now.minusDays(1),
-            now.plusDays(3)
-        );
-        noticeMessageMapper.insert(systemNotice);
-
-        noticeRecipientMapper.insert(createRecipient(surveyNotice.getId(), 1L, 0, now.minusHours(6)));
-        noticeRecipientMapper.insert(createRecipient(reportNotice.getId(), 1L, 0, now.minusHours(3)));
-        noticeRecipientMapper.insert(createRecipient(systemNotice.getId(), 1L, 1, now.minusDays(1)));
-
-        noticeRecipientMapper.insert(createRecipient(surveyNotice.getId(), 2L, 0, now.minusHours(6)));
-        noticeRecipientMapper.insert(createRecipient(reportNotice.getId(), 2L, 1, now.minusHours(2)));
-
-        noticeRecipientMapper.insert(createRecipient(surveyNotice.getId(), 3L, 0, now.minusHours(6)));
-        noticeRecipientMapper.insert(createRecipient(systemNotice.getId(), 3L, 0, now.minusDays(1)));
-    }
-
-    private NoticeMessage createNotice(
-        String noticeType,
-        String title,
-        String content,
-        Long senderUserId,
-        String bizType,
-        Long bizId,
-        String channelType,
-        LocalDateTime sendAt,
-        LocalDateTime expireAt
-    ) {
-        NoticeMessage message = new NoticeMessage();
-        message.setNoticeType(noticeType);
-        message.setTitle(title);
-        message.setContent(content);
-        message.setSenderUserId(senderUserId);
-        message.setBizType(bizType);
-        message.setBizId(bizId);
-        message.setChannelType(channelType);
-        message.setPriorityLevel(1);
-        message.setPublishStatus("PUBLISHED");
-        message.setSendAt(sendAt);
-        message.setExpireAt(expireAt);
-        message.setCreatedAt(sendAt);
-        message.setUpdatedAt(sendAt);
-        message.setIsDeleted(0);
-        message.setRemark("seed");
-        return message;
-    }
-
-    private NoticeRecipient createRecipient(Long noticeId, Long recipientUserId, Integer readStatus, LocalDateTime createdAt) {
-        NoticeRecipient recipient = new NoticeRecipient();
-        recipient.setNoticeId(noticeId);
-        recipient.setRecipientUserId(recipientUserId);
-        recipient.setReadStatus(readStatus);
-        recipient.setReadAt(readStatus == 1 ? createdAt.plusMinutes(30) : null);
-        recipient.setDeletedFlag(0);
-        recipient.setCreatedAt(createdAt);
-        recipient.setUpdatedAt(createdAt);
-        recipient.setIsDeleted(0);
-        recipient.setRemark("seed");
-        return recipient;
     }
 
     private NoticeInboxItemVO toInboxItem(NoticeRecipient recipient, NoticeMessage message) {
@@ -333,7 +231,7 @@ public class NoticeCenterService {
     private NoticeRecipient getRecipient(Long recipientId) {
         NoticeRecipient recipient = noticeRecipientMapper.selectById(recipientId);
         if (recipient == null || recipient.getIsDeleted() == 1 || recipient.getDeletedFlag() == 1) {
-            throw new BusinessException("消息不存在");
+            throw new BusinessException("Notice recipient not found");
         }
         return recipient;
     }
@@ -346,6 +244,6 @@ public class NoticeCenterService {
         if (currentUser.getRoleCodes() != null && currentUser.getRoleCodes().contains(RoleConstants.SUPER_ADMIN)) {
             return;
         }
-        throw new BusinessException(403, "无权访问当前消息数据");
+        throw new BusinessException(403, "Access denied");
     }
 }

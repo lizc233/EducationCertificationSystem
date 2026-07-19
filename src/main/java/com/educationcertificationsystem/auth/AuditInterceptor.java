@@ -27,30 +27,34 @@ public class AuditInterceptor implements HandlerInterceptor {
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
-        Object startTime = request.getAttribute(START_TIME);
-        long duration = startTime instanceof Long value ? System.currentTimeMillis() - value : 0L;
-        CurrentUserInfo currentUser = CurrentUserContext.get();
+        try {
+            Object startTime = request.getAttribute(START_TIME);
+            long duration = startTime instanceof Long value ? System.currentTimeMillis() - value : 0L;
+            CurrentUserInfo currentUser = CurrentUserContext.get();
 
-        SysOperationLog log = new SysOperationLog();
-        if (currentUser != null) {
-            log.setOperatorUserId(currentUser.getUserId());
-            log.setOperatorName(currentUser.getRealName());
+            SysOperationLog log = new SysOperationLog();
+            if (currentUser != null) {
+                log.setOperatorUserId(currentUser.getUserId());
+                log.setOperatorName(currentUser.getRealName());
+            }
+            log.setLogType(resolveLogType(request.getMethod(), request.getRequestURI()));
+            log.setModuleName(resolveModuleName(request.getRequestURI()));
+            log.setBizType(request.getMethod());
+            log.setRequestUri(request.getRequestURI());
+            log.setRequestMethod(request.getMethod());
+            log.setRequestParams(request.getQueryString());
+            log.setSuccessFlag(ex == null && response.getStatus() < 400 ? 1 : 0);
+            log.setErrorMessage(ex == null ? null : ex.getMessage());
+            log.setDurationMs((int) duration);
+            log.setIpAddress(request.getRemoteAddr());
+            log.setUserAgent(request.getHeader("User-Agent"));
+            log.setCreatedAt(LocalDateTime.now());
+            log.setUpdatedAt(LocalDateTime.now());
+            log.setIsDeleted(0);
+            operationLogService.save(log);
+        } catch (Exception logException) {
+            // Audit logging must never break the primary request path.
         }
-        log.setLogType(resolveLogType(request.getMethod(), request.getRequestURI()));
-        log.setModuleName(resolveModuleName(request.getRequestURI()));
-        log.setBizType(request.getMethod());
-        log.setRequestUri(request.getRequestURI());
-        log.setRequestMethod(request.getMethod());
-        log.setRequestParams(request.getQueryString());
-        log.setSuccessFlag(ex == null && response.getStatus() < 400 ? 1 : 0);
-        log.setErrorMessage(ex == null ? null : ex.getMessage());
-        log.setDurationMs((int) duration);
-        log.setIpAddress(request.getRemoteAddr());
-        log.setUserAgent(request.getHeader("User-Agent"));
-        log.setCreatedAt(LocalDateTime.now());
-        log.setUpdatedAt(LocalDateTime.now());
-        log.setIsDeleted(0);
-        operationLogService.save(log);
     }
 
     private String resolveLogType(String method, String uri) {

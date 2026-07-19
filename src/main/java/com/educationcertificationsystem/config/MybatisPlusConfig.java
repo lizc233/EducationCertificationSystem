@@ -17,6 +17,7 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 import javax.sql.DataSource;
 
+
 @Configuration(proxyBeanMethods = false)
 @MapperScan(basePackages = {
     "com.educationcertificationsystem.mapper",

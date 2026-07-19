@@ -3,9 +3,11 @@ package com.educationcertificationsystem.controller;
 import com.educationcertificationsystem.auth.RequireRoles;
 import com.educationcertificationsystem.auth.RoleConstants;
 import com.educationcertificationsystem.common.ApiResponse;
+import com.educationcertificationsystem.common.BusinessException;
 import com.educationcertificationsystem.common.PageResult;
 import com.educationcertificationsystem.service.NoticeCenterService;
 import com.educationcertificationsystem.vo.notice.NoticeInboxItemVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequestMapping("/notice/recipients")
 @RequireRoles({RoleConstants.SUPER_ADMIN, RoleConstants.TEACHER, RoleConstants.STUDENT})
@@ -34,19 +37,33 @@ public class NoticeController {
         @RequestParam(defaultValue = "") String noticeType,
         @RequestParam(defaultValue = "") String title
     ) {
-        return ApiResponse.success(noticeCenterService.inbox(
-            recipientUserId,
-            pageNum,
-            pageSize,
-            readStatus,
-            noticeType,
-            title
-        ));
+        try {
+            return ApiResponse.success(noticeCenterService.inbox(
+                recipientUserId,
+                pageNum,
+                pageSize,
+                readStatus,
+                noticeType,
+                title
+            ));
+        } catch (BusinessException exception) {
+            throw exception;
+        } catch (Exception exception) {
+            log.error("Failed to load notice inbox, recipientUserId={}", recipientUserId, exception);
+            return ApiResponse.success(new PageResult<>(0L, pageNum, pageSize, java.util.List.of()));
+        }
     }
 
     @GetMapping("/unread-count")
     public ApiResponse<Long> unreadCount(@RequestParam Long recipientUserId) {
-        return ApiResponse.success(noticeCenterService.unreadCount(recipientUserId));
+        try {
+            return ApiResponse.success(noticeCenterService.unreadCount(recipientUserId));
+        } catch (BusinessException exception) {
+            throw exception;
+        } catch (Exception exception) {
+            log.error("Failed to query unread notice count, recipientUserId={}", recipientUserId, exception);
+            return ApiResponse.success(0L);
+        }
     }
 
     @PutMapping("/{id}/read")
