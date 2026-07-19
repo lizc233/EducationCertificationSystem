@@ -18,7 +18,22 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import javax.sql.DataSource;
 
 @Configuration(proxyBeanMethods = false)
-@MapperScan("com.educationcertificationsystem.mapper")
+@MapperScan(basePackages = {
+    "com.educationcertificationsystem.mapper",
+    "com.educationcertificationsystem.ai.mapper",
+    "com.educationcertificationsystem.course.mapper",
+    "com.educationcertificationsystem.eval.mapper",
+    "com.educationcertificationsystem.file.mapper",
+    "com.educationcertificationsystem.improve.mapper",
+    "com.educationcertificationsystem.notice.mapper",
+    "com.educationcertificationsystem.org.mapper",
+    "com.educationcertificationsystem.program.mapper",
+    "com.educationcertificationsystem.report.mapper",
+    "com.educationcertificationsystem.role.mapper",
+    "com.educationcertificationsystem.survey.mapper",
+    "com.educationcertificationsystem.system.mapper",
+    "com.educationcertificationsystem.user.mapper"
+})
 public class MybatisPlusConfig {
 
     @Bean

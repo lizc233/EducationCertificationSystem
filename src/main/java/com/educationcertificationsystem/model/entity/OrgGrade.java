@@ -23,6 +23,11 @@ public class OrgGrade {
     /**
      * 
      */
+    private Long majorId;
+
+    /**
+     * 
+     */
     private Integer gradeYear;
 
     /**
