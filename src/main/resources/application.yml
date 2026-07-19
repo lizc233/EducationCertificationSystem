@@ -17,6 +17,24 @@ spring:
     validate-on-migrate: true
     clean-disabled: true
 
+app:
+  ai:
+    enabled: true
+    request-timeout-seconds: 60
+    top-k: 5
+    report-max-context-chunks: 6
+    improve-max-context-chunks: 6
+    local-embedding-dimension: 128
+    deepseek:
+      base-url: https://api.deepseek.com
+      api-key: ${DEEPSEEK_API_KEY:}
+      model: deepseek-v4-flash
+    qdrant:
+      enabled: true
+      base-url: http://localhost:6333
+      api-key: ${QDRANT_API_KEY:}
+      collection-name: ecs_ai_knowledge
+
 mybatis-plus:
   mapper-locations: classpath*:com/educationcertificationsystem/mapper/*.xml
   configuration:

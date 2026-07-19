@@ -108,6 +108,13 @@ public class SurveyResponseServiceImpl extends ServiceImpl<SurveyResponseMapper,
         if (request == null) {
             throw new IllegalArgumentException("Submit request cannot be null");
         }
+        if (request.getRespondentUserId() == null) {
+            throw new IllegalArgumentException("Current login information is invalid, please sign in again");
+        }
+        SysUser respondentUser = sysUserService.getById(request.getRespondentUserId());
+        if (respondentUser == null) {
+            throw new IllegalArgumentException("Current account is not linked to a valid system user and cannot submit this questionnaire");
+        }
         String availabilityError = validateFillAvailability(questionnaire, request.getRespondentUserId(), true);
         if (availabilityError != null) {
             throw new IllegalStateException(availabilityError);
@@ -126,7 +133,7 @@ public class SurveyResponseServiceImpl extends ServiceImpl<SurveyResponseMapper,
         SurveyResponse response = new SurveyResponse();
         response.setQuestionnaireId(questionnaireId);
         response.setRespondentUserId(request.getRespondentUserId());
-        response.setRespondentName(resolveRespondentName(request));
+        response.setRespondentName(resolveRespondentName(request, respondentUser));
         response.setRespondentType(resolveRespondentType(questionnaire, request));
         response.setResponseToken(StringUtils.hasText(request.getResponseToken())
                 ? request.getResponseToken().trim()
@@ -625,15 +632,11 @@ public class SurveyResponseServiceImpl extends ServiceImpl<SurveyResponseMapper,
         return questionnaire;
     }
 
-    private String resolveRespondentName(SurveySubmitRequest request) {
+    private String resolveRespondentName(SurveySubmitRequest request, SysUser respondentUser) {
         if (StringUtils.hasText(request.getRespondentName())) {
             return request.getRespondentName().trim();
         }
-        if (request.getRespondentUserId() == null) {
-            return null;
-        }
-        SysUser user = sysUserService.getById(request.getRespondentUserId());
-        return user == null ? null : user.getRealName();
+        return respondentUser == null ? null : respondentUser.getRealName();
     }
 
     private String resolveRespondentType(SurveyQuestionnaire questionnaire, SurveySubmitRequest request) {

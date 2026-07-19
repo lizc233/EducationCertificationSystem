@@ -48,12 +48,12 @@ public class AiPromptTemplate {
     /**
      * 
      */
-    private Object inputSchemaJson;
+    private String inputSchemaJson;
 
     /**
      * 
      */
-    private Object outputSchemaJson;
+    private String outputSchemaJson;
 
     /**
      * 

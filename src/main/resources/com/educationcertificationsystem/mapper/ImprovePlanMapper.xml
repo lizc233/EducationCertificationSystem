@@ -31,4 +31,101 @@
         priority,effect_review,closed_at,created_at,updated_at,
         is_deleted,remark
     </sql>
+
+    <sql id="Condition_Where">
+        where p.is_deleted = 0
+        <if test="status != null and status != ''">
+            and p.status = #{status}
+        </if>
+        <if test="sourceType != null and sourceType != ''">
+            and p.source_type = #{sourceType}
+        </if>
+        <if test="targetType != null and targetType != ''">
+            and p.target_type = #{targetType}
+        </if>
+        <if test="ownerUserId != null">
+            and p.owner_user_id = #{ownerUserId}
+        </if>
+        <if test="priority != null">
+            and p.priority = #{priority}
+        </if>
+        <if test="responsibleUserId != null">
+            and exists (
+                select 1
+                from improve_plan_action a
+                where a.plan_id = p.id
+                  and a.is_deleted = 0
+                  and a.responsible_user_id = #{responsibleUserId}
+            )
+        </if>
+        <if test="overdueOnly != null and overdueOnly == 1">
+            and p.due_date &lt; current_date
+            and p.status not in ('COMPLETED', 'VERIFIED')
+        </if>
+        <if test="keyword != null and keyword != ''">
+            and (
+                p.plan_code like concat('%', #{keyword}, '%')
+                or p.plan_name like concat('%', #{keyword}, '%')
+                or p.remark like concat('%', #{keyword}, '%')
+                or exists (
+                    select 1
+                    from improve_plan_action a
+                    where a.plan_id = p.id
+                      and a.is_deleted = 0
+                      and (
+                        a.action_code like concat('%', #{keyword}, '%')
+                        or a.action_title like concat('%', #{keyword}, '%')
+                        or a.action_desc like concat('%', #{keyword}, '%')
+                      )
+                )
+            )
+        </if>
+    </sql>
+
+    <select id="countByCondition" resultType="long">
+        select count(1)
+        from improve_plan p
+        <include refid="Condition_Where"/>
+    </select>
+
+    <select id="selectPageByCondition" resultType="com.educationcertificationsystem.model.vo.improve.ImprovePlanPageVO">
+        select p.id,
+               p.plan_code as planCode,
+               p.plan_name as planName,
+               p.source_type as sourceType,
+               p.source_id as sourceId,
+               p.target_type as targetType,
+               p.target_id as targetId,
+               p.owner_user_id as ownerUserId,
+               u.real_name as ownerUserName,
+               p.start_date as startDate,
+               p.due_date as dueDate,
+               p.status,
+               p.priority,
+               p.effect_review as effectReview,
+               p.closed_at as closedAt,
+               (
+                   select count(1)
+                   from improve_plan_action a
+                   where a.plan_id = p.id
+                     and a.is_deleted = 0
+               ) as actionCount,
+               (
+                   select count(1)
+                   from improve_plan_action a
+                   where a.plan_id = p.id
+                     and a.is_deleted = 0
+                     and a.status in ('COMPLETED', 'VERIFIED')
+               ) as completedActionCount,
+               case
+                   when p.due_date &lt; current_date and p.status not in ('COMPLETED', 'VERIFIED') then 1
+                   else 0
+               end as overdueFlag,
+               p.remark
+        from improve_plan p
+        left join sys_user u on u.id = p.owner_user_id and (u.is_deleted = 0 or u.is_deleted is null)
+        <include refid="Condition_Where"/>
+        order by overdueFlag desc, p.priority desc, p.updated_at desc, p.id desc
+        limit #{offset}, #{size}
+    </select>
 </mapper>

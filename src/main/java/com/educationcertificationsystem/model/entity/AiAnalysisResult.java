@@ -39,7 +39,7 @@ public class AiAnalysisResult {
     /**
      * 
      */
-    private Object resultJson;
+    private String resultJson;
 
     /**
      * 
