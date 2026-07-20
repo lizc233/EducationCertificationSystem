@@ -4,6 +4,10 @@ spring:
       enabled: false
   profiles:
     active: dev
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
   rabbitmq:
     port: 5672
     username: admin

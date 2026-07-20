@@ -10,8 +10,6 @@ import com.educationcertificationsystem.model.vo.eval.EvalModelPageItemVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@Slf4j
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "Evaluation Model Config")
@@ -56,87 +53,39 @@ public class EvalModelController {
     }
 
     @PostMapping
-    @Transactional
     @Operation(summary = "Create model")
     public Result<EvalModelDetailVO> create(@RequestBody EvalModelSaveRequest request) {
-        try {
-            return Result.success(evalModelService.createModel(request));
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            return Result.error(ex.getMessage());
-        } catch (Exception ex) {
-            log.error("Create evaluation model failed", ex);
-            return Result.error("Create evaluation model failed");
-        }
+        return Result.success(evalModelService.createModel(request));
     }
 
     @PutMapping("/{id}")
-    @Transactional
     @Operation(summary = "Update model")
     public Result<EvalModelDetailVO> update(@PathVariable Long id, @RequestBody EvalModelSaveRequest request) {
-        try {
-            return Result.success(evalModelService.updateModel(id, request));
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            return Result.error(ex.getMessage());
-        } catch (Exception ex) {
-            log.error("Update evaluation model failed, id={}", id, ex);
-            return Result.error("Update evaluation model failed");
-        }
+        return Result.success(evalModelService.updateModel(id, request));
     }
 
     @DeleteMapping("/{id}")
-    @Transactional
     @Operation(summary = "Delete model")
     public Result<String> delete(@PathVariable Long id) {
-        try {
-            evalModelService.deleteModel(id);
-            return Result.success("Deleted successfully");
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            return Result.error(ex.getMessage());
-        } catch (Exception ex) {
-            log.error("Delete evaluation model failed, id={}", id, ex);
-            return Result.error("Delete evaluation model failed");
-        }
+        evalModelService.deleteModel(id);
+        return Result.success("Deleted successfully");
     }
 
     @PostMapping("/{id}/enable")
-    @Transactional
     @Operation(summary = "Enable model")
     public Result<EvalModel> enable(@PathVariable Long id) {
-        try {
-            return Result.success(evalModelService.updateEnabled(id, 1));
-        } catch (IllegalArgumentException ex) {
-            return Result.error(ex.getMessage());
-        } catch (Exception ex) {
-            log.error("Enable evaluation model failed, id={}", id, ex);
-            return Result.error("Enable evaluation model failed");
-        }
+        return Result.success(evalModelService.updateEnabled(id, 1));
     }
 
     @PostMapping("/{id}/disable")
-    @Transactional
     @Operation(summary = "Disable model")
     public Result<EvalModel> disable(@PathVariable Long id) {
-        try {
-            return Result.success(evalModelService.updateEnabled(id, 0));
-        } catch (IllegalArgumentException ex) {
-            return Result.error(ex.getMessage());
-        } catch (Exception ex) {
-            log.error("Disable evaluation model failed, id={}", id, ex);
-            return Result.error("Disable evaluation model failed");
-        }
+        return Result.success(evalModelService.updateEnabled(id, 0));
     }
 
     @PostMapping("/{id}/status")
-    @Transactional
     @Operation(summary = "Update model status")
     public Result<EvalModel> updateStatus(@PathVariable Long id, @RequestParam String status) {
-        try {
-            return Result.success(evalModelService.updateStatus(id, status));
-        } catch (IllegalArgumentException ex) {
-            return Result.error(ex.getMessage());
-        } catch (Exception ex) {
-            log.error("Update model status failed, id={}", id, ex);
-            return Result.error("Update model status failed");
-        }
+        return Result.success(evalModelService.updateStatus(id, status));
     }
 }

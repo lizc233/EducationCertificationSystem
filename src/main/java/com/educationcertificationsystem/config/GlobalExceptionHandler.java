@@ -8,6 +8,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @Slf4j
 @RestControllerAdvice
@@ -33,6 +34,18 @@ public class GlobalExceptionHandler {
     public ApiResponse<Void> handleMessageNotReadableException(HttpMessageNotReadableException exception, HttpServletResponse response) {
         response.setStatus(400);
         return ApiResponse.failure(400, "请求体不是合法的 JSON");
+    }
+
+    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
+    public ApiResponse<Void> handleIllegalRequestException(RuntimeException exception, HttpServletResponse response) {
+        response.setStatus(400);
+        return ApiResponse.failure(400, exception.getMessage());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ApiResponse<Void> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException exception, HttpServletResponse response) {
+        response.setStatus(400);
+        return ApiResponse.failure(400, "上传文件过大，单个文件和整次请求均不能超过 100MB");
     }
 
     @ExceptionHandler(Exception.class)

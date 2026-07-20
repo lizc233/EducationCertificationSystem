@@ -12,8 +12,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@Slf4j
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "Graduation Requirement Evaluation")
@@ -71,75 +68,35 @@ public class EvalGraduationRequirementResultController {
     }
 
     @PostMapping("/calculate")
-    @Transactional
     @Operation(summary = "Calculate graduation requirement results")
     public Result<List<EvalGraduationRequirementResult>> calculate(
             @RequestBody EvalGraduationRequirementCalculateRequest request) {
-        try {
-            return Result.success(evalGraduationRequirementResultService.calculate(request));
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            return Result.error(ex.getMessage());
-        } catch (Exception ex) {
-            log.error("Calculate graduation requirement results failed", ex);
-            return Result.error("Calculate graduation requirement results failed");
-        }
+        return Result.success(evalGraduationRequirementResultService.calculate(request));
     }
 
     @PostMapping("/{id}/recalculate")
-    @Transactional
     @Operation(summary = "Recalculate graduation requirement result")
     public Result<EvalGraduationRequirementResult> recalculate(@PathVariable Long id,
                                                                @RequestParam(required = false) String remark) {
-        try {
-            return Result.success(evalGraduationRequirementResultService.recalculate(id, remark));
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            return Result.error(ex.getMessage());
-        } catch (Exception ex) {
-            log.error("Recalculate graduation requirement result failed, id={}", id, ex);
-            return Result.error("Recalculate graduation requirement result failed");
-        }
+        return Result.success(evalGraduationRequirementResultService.recalculate(id, remark));
     }
 
     @PostMapping("/{id}/confirm")
-    @Transactional
     @Operation(summary = "Confirm graduation requirement result")
     public Result<EvalGraduationRequirementResult> confirm(@PathVariable Long id) {
-        try {
-            return Result.success(evalGraduationRequirementResultService.confirm(id));
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            return Result.error(ex.getMessage());
-        } catch (Exception ex) {
-            log.error("Confirm graduation requirement result failed, id={}", id, ex);
-            return Result.error("Confirm graduation requirement result failed");
-        }
+        return Result.success(evalGraduationRequirementResultService.confirm(id));
     }
 
     @PostMapping("/{id}/close-warning")
-    @Transactional
     @Operation(summary = "Close warning")
     public Result<EvalGraduationRequirementResult> closeWarning(@PathVariable Long id,
                                                                 @RequestParam(required = false) String remark) {
-        try {
-            return Result.success(evalGraduationRequirementResultService.closeWarning(id, remark));
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            return Result.error(ex.getMessage());
-        } catch (Exception ex) {
-            log.error("Close warning failed, id={}", id, ex);
-            return Result.error("Close warning failed");
-        }
+        return Result.success(evalGraduationRequirementResultService.closeWarning(id, remark));
     }
 
     @PostMapping("/notify-warnings")
-    @Transactional
     @Operation(summary = "Notify warning results")
     public Result<Integer> notifyWarnings(@RequestBody EvalGraduationWarningNotifyRequest request) {
-        try {
-            return Result.success(evalGraduationRequirementResultService.notifyWarnings(request));
-        } catch (IllegalArgumentException | IllegalStateException ex) {
-            return Result.error(ex.getMessage());
-        } catch (Exception ex) {
-            log.error("Notify warning results failed", ex);
-            return Result.error("Notify warning results failed");
-        }
+        return Result.success(evalGraduationRequirementResultService.notifyWarnings(request));
     }
 }

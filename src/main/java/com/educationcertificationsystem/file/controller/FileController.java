@@ -2,6 +2,7 @@ package com.educationcertificationsystem.file.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.educationcertificationsystem.auth.CurrentUserContext;
 import com.educationcertificationsystem.common.Result;
 import com.educationcertificationsystem.model.entity.SysFile;
 import com.educationcertificationsystem.file.service.FileStorageService;
@@ -77,13 +78,13 @@ public class FileController {
 
     @PostMapping("/upload")
     public Result<SysFile> upload(@RequestParam("file") MultipartFile file,
-                                  @RequestParam Long uploadUserId,
                                   @RequestParam(required = false) String bizType,
                                   @RequestParam(required = false) Long bizId,
                                   @RequestParam(required = false) String visibilityScope,
                                   @RequestParam(required = false) String remark) {
         try {
-            SysFile saved = fileStorageService.store(file, bizType, bizId, uploadUserId, visibilityScope, remark);
+            Long resolvedUploadUserId = CurrentUserContext.require().getUserId();
+            SysFile saved = fileStorageService.store(file, bizType, bizId, resolvedUploadUserId, visibilityScope, remark);
             decorateDownloadUrl(saved);
             return Result.success(saved);
         } catch (IllegalArgumentException ex) {
