@@ -14,11 +14,14 @@ import com.educationcertificationsystem.program.service.TrProgramTargetService;
 import com.educationcertificationsystem.program.service.TrProgramVersionService;
 import com.educationcertificationsystem.program.service.TrRequirementIndicatorPointService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/lookups")
@@ -39,6 +42,7 @@ public class LookupController {
     private final TrRequirementIndicatorPointService trRequirementIndicatorPointService;
     private final EduCourseObjectiveService eduCourseObjectiveService;
     private final EduCourseAssessmentMethodService eduCourseAssessmentMethodService;
+    private final JdbcTemplate jdbcTemplate;
 
     @GetMapping("/colleges")
     public Result<List<LookupOption>> colleges() {
@@ -64,13 +68,50 @@ public class LookupController {
 
     @GetMapping("/grades")
     public Result<List<LookupOption>> grades() {
-        return Result.success(orgGradeService.list(new QueryWrapper<OrgGrade>()
+        boolean hasMajorIdColumn = hasOrgGradeMajorIdColumn();
+        QueryWrapper<OrgGrade> wrapper = new QueryWrapper<OrgGrade>()
                 .and(w -> w.eq("is_deleted", 0).or().isNull("is_deleted"))
                 .orderByDesc("grade_year")
-                .orderByAsc("id"))
+                .orderByAsc("id");
+        if (hasMajorIdColumn) {
+            wrapper.orderByAsc("major_id");
+        }
+
+        List<OrgGrade> grades = orgGradeService.list(wrapper);
+        if (!hasMajorIdColumn) {
+            return Result.success(grades.stream()
+                    .map(item -> new LookupOption(
+                            item.getId(),
+                            item.getGradeYear() == null ? String.valueOf(item.getId()) : item.getGradeYear() + "级"))
+                    .toList());
+        }
+
+        Map<Long, String> majorNameMap = orgMajorService.list(new QueryWrapper<OrgMajor>()
+                        .and(w -> w.eq("is_deleted", 0).or().isNull("is_deleted")))
                 .stream()
-                .map(item -> new LookupOption(item.getId(), item.getGradeYear() == null ? String.valueOf(item.getId()) : String.valueOf(item.getGradeYear())))
+                .collect(Collectors.toMap(OrgMajor::getId, item -> item.getMajorName() == null ? item.getMajorCode() : item.getMajorName()));
+
+        return Result.success(grades.stream()
+                .map(item -> {
+                    String gradeLabel = item.getGradeYear() == null ? String.valueOf(item.getId()) : item.getGradeYear() + "级";
+                    String majorName = majorNameMap.get(item.getMajorId());
+                    String label = (majorName == null || majorName.isBlank()) ? gradeLabel : gradeLabel + " / " + majorName;
+                    return new LookupOption(item.getId(), label, item.getMajorId());
+                })
                 .toList());
+    }
+
+    private boolean hasOrgGradeMajorIdColumn() {
+        Integer count = jdbcTemplate.queryForObject(
+                """
+                SELECT COUNT(*)
+                FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'org_grade'
+                  AND COLUMN_NAME = 'major_id'
+                """,
+                Integer.class);
+        return count != null && count > 0;
     }
 
     @GetMapping("/classes")
