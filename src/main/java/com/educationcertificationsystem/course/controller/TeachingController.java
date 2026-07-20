@@ -5,12 +5,20 @@ import cn.hutool.core.bean.copier.CopyOptions;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.educationcertificationsystem.common.Result;
-import com.educationcertificationsystem.model.entity.TeachingTask;
 import com.educationcertificationsystem.course.service.TeachingTaskService;
+import com.educationcertificationsystem.model.entity.TeachingTask;
 import com.educationcertificationsystem.support.EntityAuditSupport;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.UUID;
 
@@ -47,7 +55,9 @@ public class TeachingController {
             wrapper.eq("task_status", taskStatus);
         }
         if (keyword != null && !keyword.isBlank()) {
-            wrapper.and(w -> w.like("task_code", keyword).or().like("schedule_desc", keyword).or().like("remark", keyword));
+            wrapper.and(w -> w.like("task_code", keyword)
+                    .or().like("schedule_desc", keyword)
+                    .or().like("remark", keyword));
         }
         wrapper.orderByDesc("id");
         return Result.success(teachingTaskService.page(new Page<>(page, size), wrapper));
@@ -70,34 +80,45 @@ public class TeachingController {
 
     @PostMapping("/tasks")
     public Result<TeachingTask> createTask(@RequestBody TeachingTask task) {
-        if (task.getTaskStatus() == null || task.getTaskStatus().isBlank()) {
-            task.setTaskStatus("DRAFT");
+        try {
+            validateRequiredFields(task);
+            if (task.getTaskStatus() == null || task.getTaskStatus().isBlank()) {
+                task.setTaskStatus("DRAFT");
+            }
+            if (task.getTaskCode() == null || task.getTaskCode().isBlank()) {
+                task.setTaskCode("TT-" + System.currentTimeMillis() + "-"
+                        + UUID.randomUUID().toString().substring(0, 8));
+            }
+            validateTaskCodeUnique(task.getTaskCode(), null);
+            validateTaskConflict(task, null);
+            EntityAuditSupport.touchCreate(task);
+            teachingTaskService.save(task);
+            return Result.success(task);
+        } catch (IllegalArgumentException ex) {
+            return Result.error(ex.getMessage());
         }
-        if (task.getTaskCode() == null || task.getTaskCode().isBlank()) {
-            task.setTaskCode("TT-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 8));
-        }
-        validateTaskCodeUnique(task.getTaskCode(), null);
-        validateTaskConflict(task, null);
-        EntityAuditSupport.touchCreate(task);
-        teachingTaskService.save(task);
-        return Result.success(task);
     }
 
     @PutMapping("/tasks/{id}")
     public Result<TeachingTask> updateTask(@PathVariable Long id, @RequestBody TeachingTask task) {
-        TeachingTask current = teachingTaskService.getById(id);
-        if (current == null) {
-            return Result.error("授课任务不存在");
+        try {
+            TeachingTask current = teachingTaskService.getById(id);
+            if (current == null) {
+                return Result.error("授课任务不存在");
+            }
+            validateTaskCodeUnique(
+                    task.getTaskCode() != null && !task.getTaskCode().isBlank() ? task.getTaskCode() : current.getTaskCode(),
+                    current.getId());
+            BeanUtil.copyProperties(task, current, CopyOptions.create().setIgnoreNullValue(true)
+                    .setIgnoreProperties("id", "createdAt", "updatedAt", "isDeleted"));
+            validateRequiredFields(current);
+            validateTaskConflict(current, current.getId());
+            EntityAuditSupport.touchUpdate(current);
+            teachingTaskService.updateById(current);
+            return Result.success(current);
+        } catch (IllegalArgumentException ex) {
+            return Result.error(ex.getMessage());
         }
-        validateTaskCodeUnique(
-                task.getTaskCode() != null && !task.getTaskCode().isBlank() ? task.getTaskCode() : current.getTaskCode(),
-                current.getId());
-        BeanUtil.copyProperties(task, current, CopyOptions.create().setIgnoreNullValue(true)
-                .setIgnoreProperties("id", "createdAt", "updatedAt", "isDeleted"));
-        validateTaskConflict(current, current.getId());
-        EntityAuditSupport.touchUpdate(current);
-        teachingTaskService.updateById(current);
-        return Result.success(current);
     }
 
     @DeleteMapping("/tasks/{id}")
@@ -141,7 +162,10 @@ public class TeachingController {
     }
 
     private void validateTaskConflict(TeachingTask task, Long currentId) {
-        if (task.getSemesterId() == null || task.getCourseId() == null || task.getClassId() == null || task.getTeacherId() == null) {
+        if (task.getSemesterId() == null
+                || task.getCourseId() == null
+                || task.getClassId() == null
+                || task.getTeacherId() == null) {
             return;
         }
         long count = teachingTaskService.count(activeWrapper()
@@ -152,6 +176,33 @@ public class TeachingController {
                 .ne(currentId != null, "id", currentId));
         if (count > 0) {
             throw new IllegalArgumentException("同一学期下该教师、课程和班级的授课任务已存在");
+        }
+    }
+
+    private void validateRequiredFields(TeachingTask task) {
+        if (task == null) {
+            throw new IllegalArgumentException("授课任务数据不能为空");
+        }
+        if (task.getSemesterId() == null) {
+            throw new IllegalArgumentException("请选择学期");
+        }
+        if (task.getCourseId() == null) {
+            throw new IllegalArgumentException("请选择课程");
+        }
+        if (task.getClassId() == null) {
+            throw new IllegalArgumentException("请选择班级");
+        }
+        if (task.getTeacherId() == null) {
+            throw new IllegalArgumentException("请选择教师");
+        }
+        if (task.getProgramVersionId() == null) {
+            throw new IllegalArgumentException("请选择方案版本");
+        }
+        if (task.getTotalHours() == null) {
+            throw new IllegalArgumentException("请输入总学时");
+        }
+        if (task.getTotalHours() < 0) {
+            throw new IllegalArgumentException("总学时不能小于 0");
         }
     }
 }

@@ -155,7 +155,7 @@ public class NoticeCenterService {
                     id BIGINT AUTO_INCREMENT PRIMARY KEY,
                     notice_type VARCHAR(50) NOT NULL,
                     title VARCHAR(200) NOT NULL,
-                    content CLOB NOT NULL,
+                    content TEXT NOT NULL,
                     sender_user_id BIGINT,
                     biz_type VARCHAR(50),
                     biz_id BIGINT,

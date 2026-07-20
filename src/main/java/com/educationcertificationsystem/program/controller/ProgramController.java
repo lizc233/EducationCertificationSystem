@@ -317,11 +317,12 @@ public class ProgramController {
     @PutMapping("/versions/{id}/grades")
     @Transactional
     public Result<Void> replaceGrades(@PathVariable Long id, @RequestBody List<Long> gradeIds) {
-        requireActiveVersion(id);
+        TrProgramVersion version = requireActiveVersion(id);
         List<Long> distinctGradeIds = CollectionUtils.isEmpty(gradeIds)
                 ? List.of()
                 : gradeIds.stream().filter(Objects::nonNull).distinct().toList();
         validateGradeIdsExist(distinctGradeIds);
+        validateGradeIdsMatchVersionMajor(version, distinctGradeIds);
         applyGradeService.remove(new QueryWrapper<TrProgramApplyGrade>().eq("program_version_id", id));
         if (!distinctGradeIds.isEmpty()) {
             List<TrProgramApplyGrade> rows = distinctGradeIds.stream().map(gradeId -> {
@@ -979,6 +980,18 @@ public class ProgramController {
         long count = orgGradeService.count(this.<OrgGrade>activeWrapper().in("id", gradeIds));
         if (count != gradeIds.size()) {
             throw new IllegalArgumentException("年级数据不存在或已删除");
+        }
+    }
+
+    private void validateGradeIdsMatchVersionMajor(TrProgramVersion version, List<Long> gradeIds) {
+        if (version == null || CollectionUtils.isEmpty(gradeIds) || version.getMajorId() == null) {
+            return;
+        }
+        List<OrgGrade> grades = orgGradeService.list(this.<OrgGrade>activeWrapper().in("id", gradeIds));
+        boolean hasMismatchedGrade = grades.stream()
+                .anyMatch(item -> item.getMajorId() != null && !Objects.equals(item.getMajorId(), version.getMajorId()));
+        if (hasMismatchedGrade) {
+            throw new IllegalArgumentException("所选年级与培养方案所属专业不一致");
         }
     }
 
