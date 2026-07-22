@@ -26,4 +26,40 @@
         source_type,source_ref_id,submit_status,locked_flag,created_at,
         updated_at,is_deleted,remark
     </sql>
+
+    <resultMap id="DetailViewMap" type="com.educationcertificationsystem.vo.course.ScoreDetailView">
+        <id property="id" column="id" />
+        <result property="batchId" column="batch_id" />
+        <result property="studentId" column="student_id" />
+        <result property="studentNo" column="student_no" />
+        <result property="studentName" column="student_name" />
+        <result property="className" column="class_name" />
+        <result property="rawScore" column="raw_score" />
+        <result property="weightedScore" column="weighted_score" />
+        <result property="totalScore" column="total_score" />
+        <result property="sourceType" column="source_type" />
+        <result property="sourceRefId" column="source_ref_id" />
+        <result property="submitStatus" column="submit_status" />
+        <result property="lockedFlag" column="locked_flag" />
+        <result property="createdAt" column="created_at" />
+        <result property="updatedAt" column="updated_at" />
+        <result property="remark" column="remark" />
+    </resultMap>
+
+    <select id="selectDetailViews" resultMap="DetailViewMap">
+        SELECT
+            d.id, d.batch_id, d.student_id, d.raw_score, d.weighted_score, d.total_score,
+            d.source_type, d.source_ref_id, d.submit_status, d.locked_flag,
+            d.created_at, d.updated_at, d.remark,
+            s.student_no AS student_no,
+            u.real_name AS student_name,
+            c.class_name AS class_name
+        FROM course_score_detail d
+        LEFT JOIN edu_student s ON s.id = d.student_id
+        LEFT JOIN sys_user u ON u.id = s.user_id
+        LEFT JOIN org_class c ON c.id = s.class_id
+        WHERE d.batch_id = #{batchId}
+          AND (d.is_deleted = 0 OR d.is_deleted IS NULL)
+        ORDER BY s.student_no, d.id
+    </select>
 </mapper>
