@@ -21,6 +21,7 @@ public interface EvalCourseTargetResultService extends IService<EvalCourseTarget
                                                        long pageSize,
                                                        Long taskId,
                                                        Long semesterId,
+                                                       Long courseId,
                                                        Long classId,
                                                        Long objectiveId,
                                                        Long modelId,

@@ -219,7 +219,10 @@ public class LookupController {
                 .orderByAsc("sort_no")
                 .orderByAsc("id"))
                 .stream()
-                .map(item -> new LookupOption(item.getId(), item.getObjectiveName() == null ? item.getObjectiveCode() : item.getObjectiveName()))
+                .map(item -> new LookupOption(
+                        item.getId(),
+                        item.getObjectiveName() == null ? item.getObjectiveCode() : item.getObjectiveName(),
+                        item.getCourseId()))
                 .toList());
     }
 

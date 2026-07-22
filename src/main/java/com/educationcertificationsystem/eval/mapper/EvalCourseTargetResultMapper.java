@@ -18,6 +18,7 @@ public interface EvalCourseTargetResultMapper extends BaseMapper<EvalCourseTarge
 
     long countByCondition(@Param("taskId") Long taskId,
                           @Param("semesterId") Long semesterId,
+                          @Param("courseId") Long courseId,
                           @Param("classId") Long classId,
                           @Param("objectiveId") Long objectiveId,
                           @Param("modelId") Long modelId,
@@ -28,6 +29,7 @@ public interface EvalCourseTargetResultMapper extends BaseMapper<EvalCourseTarge
                                                              @Param("size") long size,
                                                              @Param("taskId") Long taskId,
                                                              @Param("semesterId") Long semesterId,
+                                                             @Param("courseId") Long courseId,
                                                              @Param("classId") Long classId,
                                                              @Param("objectiveId") Long objectiveId,
                                                              @Param("modelId") Long modelId,

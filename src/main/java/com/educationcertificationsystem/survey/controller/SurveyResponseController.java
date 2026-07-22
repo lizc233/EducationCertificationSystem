@@ -1,7 +1,5 @@
 package com.educationcertificationsystem.survey.controller;
 
-import cn.hutool.poi.excel.ExcelUtil;
-import cn.hutool.poi.excel.ExcelWriter;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.educationcertificationsystem.common.Result;
 import com.educationcertificationsystem.model.dto.survey.SurveySubmitRequest;
@@ -12,20 +10,17 @@ import com.educationcertificationsystem.model.vo.survey.SurveyResponseDetailVO;
 import com.educationcertificationsystem.model.vo.survey.SurveyResponseOverviewVO;
 import com.educationcertificationsystem.model.vo.survey.SurveyResponsePageVO;
 import com.educationcertificationsystem.survey.service.SurveyResponseService;
+import com.educationcertificationsystem.support.CsvExportSupport;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.ServletOutputStream;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -113,34 +108,29 @@ public class SurveyResponseController {
 
     @GetMapping("/download/responses")
     @Operation(summary = "Download responses")
-    public void download(@PathVariable Long questionnaireId, HttpServletResponse response) throws IOException {
+    public ResponseEntity<ByteArrayResource> download(@PathVariable Long questionnaireId) {
         List<SurveyResponseDetailVO> details = surveyResponseService.exportResponses(questionnaireId);
-        writeExcel(surveyResponseService.buildExportRows(questionnaireId, details), questionnaireId, response);
+        List<LinkedHashMap<String, Object>> rows = surveyResponseService.buildExportRows(questionnaireId, details);
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        String fileName = "survey_responses_" + questionnaireId + "_" + timestamp + ".csv";
+        return CsvExportSupport.csv(fileName, buildHeaders(rows), buildBodyRows(rows));
     }
 
-    private void writeExcel(List<LinkedHashMap<String, Object>> rows,
-                            Long questionnaireId,
-                            HttpServletResponse response) throws IOException {
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        String fileName = "survey_responses_" + questionnaireId + "_" + timestamp + ".xlsx";
-        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        response.setContentType(ExcelUtil.XLSX_CONTENT_TYPE);
-        response.setHeader(
-                "Content-Disposition",
-                "attachment; filename*=UTF-8''" + URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20"));
-        ExcelWriter writer = ExcelUtil.getWriter(true);
-        try (ServletOutputStream outputStream = response.getOutputStream()) {
-            writer.renameSheet("responses");
-            if (rows == null || rows.isEmpty()) {
-                writer.writeHeadRow(List.of("responseId", "respondentName", "respondentType", "submittedAt"));
-            } else {
-                List<LinkedHashMap<String, Object>> writableRows = new ArrayList<>(rows);
-                writer.write(writableRows, true);
-            }
-            writer.autoSizeColumnAll();
-            writer.flush(outputStream, true);
-        } finally {
-            writer.close();
+    private List<String> buildHeaders(List<LinkedHashMap<String, Object>> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return List.of("Response ID", "Respondent", "Respondent Type", "Submitted At");
         }
+        return List.copyOf(rows.get(0).keySet());
+    }
+
+    private List<List<?>> buildBodyRows(List<LinkedHashMap<String, Object>> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return List.of();
+        }
+        List<List<?>> bodyRows = new java.util.ArrayList<>(rows.size());
+        for (LinkedHashMap<String, Object> row : rows) {
+            bodyRows.add(new java.util.ArrayList<>(row.values()));
+        }
+        return bodyRows;
     }
 }

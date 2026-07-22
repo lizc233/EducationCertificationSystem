@@ -73,16 +73,17 @@ public class EvalCourseTargetResultServiceImpl
 
     @Override
     public Page<EvalCourseTargetResultPageVO> pageByCondition(long pageNum, long pageSize, Long taskId, Long semesterId,
-                                                              Long classId, Long objectiveId, Long modelId,
+                                                              Long courseId, Long classId, Long objectiveId, Long modelId,
                                                               Integer lockedFlag, String keyword) {
         long current = Math.max(pageNum, 1);
         long size = Math.max(pageSize, 1);
         long offset = (current - 1) * size;
-        long total = baseMapper.countByCondition(taskId, semesterId, classId, objectiveId, modelId, lockedFlag, keyword);
+        long total = baseMapper.countByCondition(taskId, semesterId, courseId, classId, objectiveId, modelId,
+                lockedFlag, keyword);
         List<EvalCourseTargetResultPageVO> records = total == 0
                 ? List.of()
-                : baseMapper.selectPageByCondition(offset, size, taskId, semesterId, classId, objectiveId, modelId,
-                lockedFlag, keyword);
+                : baseMapper.selectPageByCondition(offset, size, taskId, semesterId, courseId, classId, objectiveId,
+                modelId, lockedFlag, keyword);
         Page<EvalCourseTargetResultPageVO> page = new Page<>(current, size);
         page.setTotal(total);
         page.setRecords(records);
@@ -101,7 +102,7 @@ public class EvalCourseTargetResultServiceImpl
         EvalModel model = evalModelService.getById(result.getModelId());
 
         EvalCourseTargetResultPageVO pageVO = baseMapper.selectPageByCondition(0L, 1L, result.getTaskId(), null, null,
-                result.getObjectiveId(), result.getModelId(), null, null).stream().findFirst().orElse(null);
+                null, result.getObjectiveId(), result.getModelId(), null, null).stream().findFirst().orElse(null);
 
         EvalCourseTargetResultDetailVO detail = new EvalCourseTargetResultDetailVO();
         detail.setId(result.getId());
