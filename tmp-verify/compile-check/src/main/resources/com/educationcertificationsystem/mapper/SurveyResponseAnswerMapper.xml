@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.survey.mapper.SurveyResponseAnswerMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.SurveyResponseAnswer">
+            <id property="id" column="id" />
+            <result property="responseId" column="response_id" />
+            <result property="questionId" column="question_id" />
+            <result property="optionId" column="option_id" />
+            <result property="rowId" column="row_id" />
+            <result property="columnId" column="column_id" />
+            <result property="answerText" column="answer_text" />
+            <result property="answerNumber" column="answer_number" />
+            <result property="answerJson" column="answer_json" />
+            <result property="scoreValue" column="score_value" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,response_id,question_id,option_id,row_id,column_id,
+        answer_text,answer_number,answer_json,score_value,created_at,
+        updated_at,is_deleted,remark
+    </sql>
+</mapper>

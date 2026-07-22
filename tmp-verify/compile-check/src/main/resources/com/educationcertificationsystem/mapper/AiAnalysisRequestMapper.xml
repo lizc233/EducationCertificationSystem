@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.ai.mapper.AiAnalysisRequestMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.AiAnalysisRequest">
+            <id property="id" column="id" />
+            <result property="requestNo" column="request_no" />
+            <result property="scenarioType" column="scenario_type" />
+            <result property="sourceType" column="source_type" />
+            <result property="sourceId" column="source_id" />
+            <result property="templateId" column="template_id" />
+            <result property="requesterUserId" column="requester_user_id" />
+            <result property="modelName" column="model_name" />
+            <result property="requestStatus" column="request_status" />
+            <result property="retryCount" column="retry_count" />
+            <result property="requestedAt" column="requested_at" />
+            <result property="finishedAt" column="finished_at" />
+            <result property="promptSnapshot" column="prompt_snapshot" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,request_no,scenario_type,source_type,source_id,template_id,
+        requester_user_id,model_name,request_status,retry_count,requested_at,
+        finished_at,prompt_snapshot,created_at,updated_at,is_deleted,
+        remark
+    </sql>
+</mapper>

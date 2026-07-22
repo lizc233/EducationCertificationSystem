@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.eval.mapper.EvalModelItemMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.EvalModelItem">
+            <id property="id" column="id" />
+            <result property="modelId" column="model_id" />
+            <result property="itemCode" column="item_code" />
+            <result property="itemName" column="item_name" />
+            <result property="itemType" column="item_type" />
+            <result property="weightPercent" column="weight_percent" />
+            <result property="thresholdValue" column="threshold_value" />
+            <result property="calcRule" column="calc_rule" />
+            <result property="sortNo" column="sort_no" />
+            <result property="enabled" column="enabled" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,model_id,item_code,item_name,item_type,weight_percent,
+        threshold_value,calc_rule,sort_no,enabled,created_at,
+        updated_at,is_deleted,remark
+    </sql>
+
+    <select id="selectActiveByModelId" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from eval_model_item
+        where model_id = #{modelId}
+          and is_deleted = 0
+        order by sort_no asc, id asc
+    </select>
+
+    <delete id="deleteByModelId">
+        delete from eval_model_item
+        where model_id = #{modelId}
+    </delete>
+</mapper>

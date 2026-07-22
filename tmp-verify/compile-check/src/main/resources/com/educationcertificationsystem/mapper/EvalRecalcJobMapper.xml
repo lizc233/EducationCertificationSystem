@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.eval.mapper.EvalRecalcJobMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.EvalRecalcJob">
+            <id property="id" column="id" />
+            <result property="jobNo" column="job_no" />
+            <result property="jobType" column="job_type" />
+            <result property="relationType" column="relation_type" />
+            <result property="relationId" column="relation_id" />
+            <result property="status" column="status" />
+            <result property="retryCount" column="retry_count" />
+            <result property="errorMessage" column="error_message" />
+            <result property="queuedAt" column="queued_at" />
+            <result property="startedAt" column="started_at" />
+            <result property="finishedAt" column="finished_at" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,job_no,job_type,relation_type,relation_id,status,
+        retry_count,error_message,queued_at,started_at,finished_at,
+        created_at,updated_at,is_deleted,remark
+    </sql>
+
+    <select id="selectActiveById" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from eval_recalc_job
+        where id = #{id}
+          and is_deleted = 0
+        limit 1
+    </select>
+</mapper>

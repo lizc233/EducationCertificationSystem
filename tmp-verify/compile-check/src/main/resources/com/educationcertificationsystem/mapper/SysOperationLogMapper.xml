@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.system.mapper.SysOperationLogMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.SysOperationLog">
+            <id property="id" column="id" />
+            <result property="operatorUserId" column="operator_user_id" />
+            <result property="operatorName" column="operator_name" />
+            <result property="logType" column="log_type" />
+            <result property="moduleName" column="module_name" />
+            <result property="bizType" column="biz_type" />
+            <result property="bizId" column="biz_id" />
+            <result property="requestUri" column="request_uri" />
+            <result property="requestMethod" column="request_method" />
+            <result property="requestParams" column="request_params" />
+            <result property="responseResult" column="response_result" />
+            <result property="successFlag" column="success_flag" />
+            <result property="errorMessage" column="error_message" />
+            <result property="durationMs" column="duration_ms" />
+            <result property="ipAddress" column="ip_address" />
+            <result property="userAgent" column="user_agent" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,operator_user_id,operator_name,log_type,module_name,biz_type,
+        biz_id,request_uri,request_method,request_params,response_result,
+        success_flag,error_message,duration_ms,ip_address,user_agent,
+        created_at,updated_at,is_deleted,remark
+    </sql>
+</mapper>

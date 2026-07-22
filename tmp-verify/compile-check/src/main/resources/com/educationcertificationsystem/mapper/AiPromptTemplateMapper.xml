@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.ai.mapper.AiPromptTemplateMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.AiPromptTemplate">
+            <id property="id" column="id" />
+            <result property="templateCode" column="template_code" />
+            <result property="templateName" column="template_name" />
+            <result property="scenarioType" column="scenario_type" />
+            <result property="systemPrompt" column="system_prompt" />
+            <result property="userPrompt" column="user_prompt" />
+            <result property="inputSchemaJson" column="input_schema_json" />
+            <result property="outputSchemaJson" column="output_schema_json" />
+            <result property="enabled" column="enabled" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,template_code,template_name,scenario_type,system_prompt,user_prompt,
+        input_schema_json,output_schema_json,enabled,created_at,updated_at,
+        is_deleted,remark
+    </sql>
+</mapper>

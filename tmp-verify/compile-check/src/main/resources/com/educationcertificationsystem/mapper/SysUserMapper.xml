@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.user.mapper.SysUserMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.SysUser">
+            <id property="id" column="id" />
+            <result property="username" column="username" />
+            <result property="passwordHash" column="password_hash" />
+            <result property="realName" column="real_name" />
+            <result property="phone" column="phone" />
+            <result property="email" column="email" />
+            <result property="userStatus" column="user_status" />
+            <result property="lastLoginAt" column="last_login_at" />
+            <result property="lastLoginIp" column="last_login_ip" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,username,password_hash,real_name,phone,email,
+        user_status,last_login_at,last_login_ip,created_at,updated_at,
+        is_deleted,remark
+    </sql>
+</mapper>

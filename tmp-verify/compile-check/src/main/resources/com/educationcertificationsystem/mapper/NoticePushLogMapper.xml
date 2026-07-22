@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.notice.mapper.NoticePushLogMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.NoticePushLog">
+        <id property="id" column="id" />
+        <result property="noticeId" column="notice_id" />
+        <result property="mqTopic" column="mq_topic" />
+        <result property="mqKey" column="mq_key" />
+        <result property="retryCount" column="retry_count" />
+        <result property="sendStatus" column="send_status" />
+        <result property="errorMessage" column="error_message" />
+        <result property="sentAt" column="sent_at" />
+        <result property="ackedAt" column="acked_at" />
+        <result property="createdAt" column="created_at" />
+        <result property="updatedAt" column="updated_at" />
+        <result property="isDeleted" column="is_deleted" />
+        <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,notice_id,mq_topic,mq_key,retry_count,send_status,
+        error_message,sent_at,acked_at,created_at,updated_at,
+        is_deleted,remark
+    </sql>
+
+    <sql id="NoticePushLog_Where">
+        where is_deleted = 0
+        <if test="noticeId != null">
+            and notice_id = #{noticeId}
+        </if>
+        <if test="sendStatus != null and sendStatus != ''">
+            and send_status = #{sendStatus}
+        </if>
+        <if test="mqTopic != null and mqTopic != ''">
+            and mq_topic = #{mqTopic}
+        </if>
+    </sql>
+
+    <select id="selectActiveById" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from notice_push_log
+        where id = #{id}
+          and is_deleted = 0
+        limit 1
+    </select>
+
+    <select id="countByCondition" resultType="long">
+        select count(1)
+        from notice_push_log
+        <include refid="NoticePushLog_Where"/>
+    </select>
+
+    <select id="selectByCondition" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from notice_push_log
+        <include refid="NoticePushLog_Where"/>
+        order by id desc
+        limit #{offset}, #{size}
+    </select>
+
+    <select id="selectLatestByNoticeId" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from notice_push_log
+        where notice_id = #{noticeId}
+          and is_deleted = 0
+        order by id desc
+        limit 1
+    </select>
+
+    <select id="selectMaxRetryCount" resultType="int">
+        select coalesce(max(retry_count), 0)
+        from notice_push_log
+        where notice_id = #{noticeId}
+          and is_deleted = 0
+    </select>
+</mapper>

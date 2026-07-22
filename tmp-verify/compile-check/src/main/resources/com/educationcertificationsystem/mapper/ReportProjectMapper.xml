@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.report.mapper.ReportProjectMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.ReportProject">
+        <id property="id" column="id"/>
+        <result property="reportCode" column="report_code"/>
+        <result property="projectName" column="project_name"/>
+        <result property="academicYear" column="academic_year"/>
+        <result property="semesterId" column="semester_id"/>
+        <result property="ownerUserId" column="owner_user_id"/>
+        <result property="generationMode" column="generation_mode"/>
+        <result property="status" column="status"/>
+        <result property="totalChapters" column="total_chapters"/>
+        <result property="lockedFlag" column="locked_flag"/>
+        <result property="exportedAt" column="exported_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        rp.id,
+        rp.report_code,
+        rp.project_name,
+        rp.academic_year,
+        rp.semester_id,
+        rp.owner_user_id,
+        rp.generation_mode,
+        rp.status,
+        rp.total_chapters,
+        rp.locked_flag,
+        rp.exported_at,
+        rp.created_at,
+        rp.updated_at,
+        rp.is_deleted,
+        rp.remark
+    </sql>
+
+    <sql id="Condition_Clause">
+        rp.is_deleted = 0
+        <if test="status != null and status != ''">
+            AND rp.status = #{status}
+        </if>
+        <if test="ownerUserId != null">
+            AND rp.owner_user_id = #{ownerUserId}
+        </if>
+        <if test="viewerUserId != null">
+            AND (
+                rp.owner_user_id = #{viewerUserId}
+                OR EXISTS (
+                    SELECT 1
+                    FROM report_task_assignment rta
+                    WHERE rta.project_id = rp.id
+                      AND rta.assignee_user_id = #{viewerUserId}
+                      AND rta.is_deleted = 0
+                )
+            )
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (
+                rp.report_code LIKE CONCAT('%', #{keyword}, '%')
+                OR rp.project_name LIKE CONCAT('%', #{keyword}, '%')
+                OR rp.academic_year LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+    </sql>
+
+    <select id="countByCondition" resultType="long">
+        SELECT COUNT(*)
+        FROM report_project rp
+        WHERE <include refid="Condition_Clause"/>
+    </select>
+
+    <select id="selectPageByCondition" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM report_project rp
+        WHERE <include refid="Condition_Clause"/>
+        ORDER BY rp.updated_at DESC, rp.id DESC
+        LIMIT #{offset}, #{size}
+    </select>
+</mapper>

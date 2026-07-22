@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.report.mapper.ReportDraftMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.ReportDraft">
+            <id property="id" column="id" />
+            <result property="chapterId" column="chapter_id" />
+            <result property="versionNo" column="version_no" />
+            <result property="draftContent" column="draft_content" />
+            <result property="editedBy" column="edited_by" />
+            <result property="editedAt" column="edited_at" />
+            <result property="lockFlag" column="lock_flag" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,chapter_id,version_no,draft_content,edited_by,edited_at,
+        lock_flag,created_at,updated_at,is_deleted,remark
+    </sql>
+</mapper>

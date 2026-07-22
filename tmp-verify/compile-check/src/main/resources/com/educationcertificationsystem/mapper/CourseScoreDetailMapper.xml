@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.course.mapper.CourseScoreDetailMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.CourseScoreDetail">
+            <id property="id" column="id" />
+            <result property="batchId" column="batch_id" />
+            <result property="studentId" column="student_id" />
+            <result property="rawScore" column="raw_score" />
+            <result property="weightedScore" column="weighted_score" />
+            <result property="totalScore" column="total_score" />
+            <result property="sourceType" column="source_type" />
+            <result property="sourceRefId" column="source_ref_id" />
+            <result property="submitStatus" column="submit_status" />
+            <result property="lockedFlag" column="locked_flag" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,batch_id,student_id,raw_score,weighted_score,total_score,
+        source_type,source_ref_id,submit_status,locked_flag,created_at,
+        updated_at,is_deleted,remark
+    </sql>
+</mapper>

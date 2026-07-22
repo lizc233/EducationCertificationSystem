@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.eval.mapper.EvalResultDetailMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.EvalResultDetail">
+            <id property="id" column="id" />
+            <result property="resultType" column="result_type" />
+            <result property="resultId" column="result_id" />
+            <result property="sourceType" column="source_type" />
+            <result property="sourceId" column="source_id" />
+            <result property="weightPercent" column="weight_percent" />
+            <result property="sourceValue" column="source_value" />
+            <result property="contributionValue" column="contribution_value" />
+            <result property="remark" column="remark" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,result_type,result_id,source_type,source_id,weight_percent,
+        source_value,contribution_value,remark,created_at,updated_at,
+        is_deleted
+    </sql>
+
+    <select id="selectByResult" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from eval_result_detail
+        where result_type = #{resultType}
+          and result_id = #{resultId}
+          and is_deleted = 0
+        order by id asc
+    </select>
+
+    <delete id="deleteByResult">
+        delete from eval_result_detail
+        where result_type = #{resultType}
+          and result_id = #{resultId}
+    </delete>
+</mapper>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.survey.mapper.SurveyQuestionMatrixColumnMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.SurveyQuestionMatrixColumn">
+            <id property="id" column="id" />
+            <result property="questionId" column="question_id" />
+            <result property="colCode" column="col_code" />
+            <result property="colText" column="col_text" />
+            <result property="colValue" column="col_value" />
+            <result property="sortNo" column="sort_no" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,question_id,col_code,col_text,col_value,sort_no,
+        created_at,updated_at,is_deleted,remark
+    </sql>
+</mapper>

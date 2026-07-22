@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.program.mapper.TrGraduationRequirementMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.TrGraduationRequirement">
+            <id property="id" column="id" />
+            <result property="programVersionId" column="program_version_id" />
+            <result property="requirementCode" column="requirement_code" />
+            <result property="requirementName" column="requirement_name" />
+            <result property="requirementDesc" column="requirement_desc" />
+            <result property="sortNo" column="sort_no" />
+            <result property="enabled" column="enabled" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,program_version_id,requirement_code,requirement_name,requirement_desc,sort_no,
+        enabled,created_at,updated_at,is_deleted,remark
+    </sql>
+</mapper>

@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.eval.mapper.EvalCourseTargetResultMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.EvalCourseTargetResult">
+            <id property="id" column="id" />
+            <result property="taskId" column="task_id" />
+            <result property="objectiveId" column="objective_id" />
+            <result property="modelId" column="model_id" />
+            <result property="attainmentRate" column="attainment_rate" />
+            <result property="attainmentValue" column="attainment_value" />
+            <result property="targetValue" column="target_value" />
+            <result property="resultLevel" column="result_level" />
+            <result property="calcTime" column="calc_time" />
+            <result property="recalculationCount" column="recalculation_count" />
+            <result property="lockedFlag" column="locked_flag" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <resultMap id="PageResultMap" type="com.educationcertificationsystem.model.vo.eval.EvalCourseTargetResultPageVO">
+            <id property="id" column="id" />
+            <result property="taskId" column="task_id" />
+            <result property="taskCode" column="task_code" />
+            <result property="courseId" column="course_id" />
+            <result property="courseName" column="course_name" />
+            <result property="semesterId" column="semester_id" />
+            <result property="semesterName" column="semester_name" />
+            <result property="classId" column="class_id" />
+            <result property="className" column="class_name" />
+            <result property="objectiveId" column="objective_id" />
+            <result property="objectiveCode" column="objective_code" />
+            <result property="objectiveName" column="objective_name" />
+            <result property="modelId" column="model_id" />
+            <result property="modelName" column="model_name" />
+            <result property="attainmentRate" column="attainment_rate" />
+            <result property="attainmentValue" column="attainment_value" />
+            <result property="targetValue" column="target_value" />
+            <result property="resultLevel" column="result_level" />
+            <result property="calcTime" column="calc_time" />
+            <result property="recalculationCount" column="recalculation_count" />
+            <result property="lockedFlag" column="locked_flag" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,task_id,objective_id,model_id,attainment_rate,attainment_value,
+        target_value,result_level,calc_time,recalculation_count,locked_flag,
+        created_at,updated_at,is_deleted,remark
+    </sql>
+
+    <sql id="Page_Where">
+        where r.is_deleted = 0
+        <if test="taskId != null">
+            and r.task_id = #{taskId}
+        </if>
+        <if test="semesterId != null">
+            and t.semester_id = #{semesterId}
+        </if>
+        <if test="courseId != null">
+            and t.course_id = #{courseId}
+        </if>
+        <if test="classId != null">
+            and t.class_id = #{classId}
+        </if>
+        <if test="objectiveId != null">
+            and r.objective_id = #{objectiveId}
+        </if>
+        <if test="modelId != null">
+            and r.model_id = #{modelId}
+        </if>
+        <if test="lockedFlag != null">
+            and r.locked_flag = #{lockedFlag}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            and (
+                t.task_code like concat('%', #{keyword}, '%')
+                or c.course_name like concat('%', #{keyword}, '%')
+                or c.course_code like concat('%', #{keyword}, '%')
+                or o.objective_name like concat('%', #{keyword}, '%')
+                or o.objective_code like concat('%', #{keyword}, '%')
+                or m.model_name like concat('%', #{keyword}, '%')
+                or cls.class_name like concat('%', #{keyword}, '%')
+                or s.semester_name like concat('%', #{keyword}, '%')
+            )
+        </if>
+    </sql>
+
+    <select id="selectActiveById" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from eval_course_target_result
+        where id = #{id}
+          and is_deleted = 0
+        limit 1
+    </select>
+
+    <select id="countByCondition" resultType="long">
+        select count(1)
+        from eval_course_target_result r
+        left join teaching_task t on t.id = r.task_id
+        left join edu_course c on c.id = t.course_id
+        left join edu_semester s on s.id = t.semester_id
+        left join org_class cls on cls.id = t.class_id
+        left join edu_course_objective o on o.id = r.objective_id
+        left join eval_model m on m.id = r.model_id
+        <include refid="Page_Where"/>
+    </select>
+
+    <select id="selectPageByCondition" resultMap="PageResultMap">
+        select r.id,
+               r.task_id,
+               t.task_code,
+               t.course_id,
+               c.course_name,
+               t.semester_id,
+               s.semester_name,
+               t.class_id,
+               cls.class_name,
+               r.objective_id,
+               o.objective_code,
+               o.objective_name,
+               r.model_id,
+               m.model_name,
+               r.attainment_rate,
+               r.attainment_value,
+               r.target_value,
+               r.result_level,
+               r.calc_time,
+               r.recalculation_count,
+               r.locked_flag,
+               r.remark
+        from eval_course_target_result r
+        left join teaching_task t on t.id = r.task_id
+        left join edu_course c on c.id = t.course_id
+        left join edu_semester s on s.id = t.semester_id
+        left join org_class cls on cls.id = t.class_id
+        left join edu_course_objective o on o.id = r.objective_id
+        left join eval_model m on m.id = r.model_id
+        <include refid="Page_Where"/>
+        order by r.calc_time desc, r.id desc
+        limit #{offset}, #{size}
+    </select>
+
+    <select id="selectByUnique" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/>
+        from eval_course_target_result
+        where task_id = #{taskId}
+          and objective_id = #{objectiveId}
+          and model_id = #{modelId}
+          and is_deleted = 0
+        limit 1
+    </select>
+</mapper>

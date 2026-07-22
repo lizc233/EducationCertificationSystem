@@ -1,0 +1,18 @@
+package com.educationcertificationsystem.eval.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.educationcertificationsystem.model.entity.EvalModelScope;
+import java.util.List;
+
+/**
+* @author Lizc233
+* @description 针对表【eval_model_scope(模型适用范围表)】的数据库操作Service
+* @createDate 2026-07-16 14:29:33
+*/
+public interface EvalModelScopeService extends IService<EvalModelScope> {
+
+    List<EvalModelScope> listActiveByModelId(Long modelId);
+
+    void replaceModelScopes(Long modelId, List<EvalModelScope> scopes);
+
+}

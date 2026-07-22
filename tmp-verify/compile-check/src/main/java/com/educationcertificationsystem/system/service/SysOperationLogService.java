@@ -1,0 +1,13 @@
+package com.educationcertificationsystem.system.service;
+
+import com.educationcertificationsystem.model.entity.SysOperationLog;
+import com.baomidou.mybatisplus.extension.service.IService;
+
+/**
+* @author Lizc233
+* @description 针对表【sys_operation_log(操作日志表)】的数据库操作Service
+* @createDate 2026-07-16 14:29:34
+*/
+public interface SysOperationLogService extends IService<SysOperationLog> {
+
+}

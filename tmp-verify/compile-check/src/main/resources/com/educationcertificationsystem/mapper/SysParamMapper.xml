@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.educationcertificationsystem.system.mapper.SysParamMapper">
+
+    <resultMap id="BaseResultMap" type="com.educationcertificationsystem.model.entity.SysParam">
+            <id property="id" column="id" />
+            <result property="paramKey" column="param_key" />
+            <result property="paramValue" column="param_value" />
+            <result property="paramType" column="param_type" />
+            <result property="isSystem" column="is_system" />
+            <result property="status" column="status" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,param_key,param_value,param_type,is_system,status,
+        created_at,updated_at,is_deleted,remark
+    </sql>
+</mapper>

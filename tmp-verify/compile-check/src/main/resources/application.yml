@@ -1,0 +1,45 @@
+spring:
+  docker:
+    compose:
+      enabled: false
+  profiles:
+    active: dev
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+  rabbitmq:
+    port: 5672
+    username: admin
+    password: 123456
+    virtual-host: /
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    validate-on-migrate: true
+    clean-disabled: true
+
+app:
+  ai:
+    enabled: true
+    request-timeout-seconds: 60
+    top-k: 5
+    report-max-context-chunks: 6
+    improve-max-context-chunks: 6
+    local-embedding-dimension: 128
+    deepseek:
+      base-url: https://api.deepseek.com
+      api-key: ${DEEPSEEK_API_KEY:}
+      model: deepseek-v4-flash
+    qdrant:
+      enabled: true
+      base-url: http://localhost:6333
+      api-key: ${QDRANT_API_KEY:}
+      collection-name: ecs_ai_knowledge
+
+mybatis-plus:
+  mapper-locations: classpath*:com/educationcertificationsystem/mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true

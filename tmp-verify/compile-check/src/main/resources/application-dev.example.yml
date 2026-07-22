@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/education_certification_system?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf-8&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    username: your_mysql_username
+    password: your_mysql_password
+  rabbitmq:
+    host: localhost
+    dynamic: false
+    listener:
+      simple:
+        auto-startup: false
+
+app:
+  ai:
+    deepseek:
+      api-key: your_deepseek_api_key
+      base-url: https://api.deepseek.com
+      model: deepseek-v4-flash
+    qdrant:
+      base-url: http://localhost:6333
+      api-key: your_qdrant_api_key_if_any

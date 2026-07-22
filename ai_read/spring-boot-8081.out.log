@@ -1,0 +1,32 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.1.0)
+
+2026-07-22T09:56:24.837+08:00  INFO 22432 --- [EducationCertificationSystem] [           main] .EducationCertificationSystemApplication : Starting EducationCertificationSystemApplication using Java 21.0.7 with PID 22432 (E:\java_ai_code\EducationCertificationSystem\target\classes started by Lizc233 in E:\java_ai_code\EducationCertificationSystem)
+2026-07-22T09:56:24.849+08:00  INFO 22432 --- [EducationCertificationSystem] [           main] .EducationCertificationSystemApplication : The following 1 profile is active: "dev"
+2026-07-22T09:56:26.299+08:00  INFO 22432 --- [EducationCertificationSystem] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8081 (http)
+2026-07-22T09:56:26.315+08:00  INFO 22432 --- [EducationCertificationSystem] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-07-22T09:56:26.316+08:00  INFO 22432 --- [EducationCertificationSystem] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.22]
+2026-07-22T09:56:26.377+08:00  INFO 22432 --- [EducationCertificationSystem] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 1460 ms
+ _ _   |_  _ _|_. ___ _ |    _ 
+| | |\/|_)(_| | |_\  |_)||_|_\ 
+     /               |         
+                        3.5.7 
+2026-07-22T09:56:28.533+08:00  INFO 22432 --- [EducationCertificationSystem] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-07-22T09:56:28.680+08:00  INFO 22432 --- [EducationCertificationSystem] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@527d48db
+2026-07-22T09:56:28.682+08:00  INFO 22432 --- [EducationCertificationSystem] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-07-22T09:56:28.710+08:00  INFO 22432 --- [EducationCertificationSystem] [           main] c.e.config.DevDataInitializer            : Skip dev seed initialization because core tables already contain data
+2026-07-22T09:56:29.779+08:00  INFO 22432 --- [EducationCertificationSystem] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8081 (http) with context path '/'
+2026-07-22T09:56:29.780+08:00  INFO 22432 --- [EducationCertificationSystem] [           main] o.s.a.r.c.CachingConnectionFactory       : Attempting to connect to: [localhost:5672]
+2026-07-22T09:56:29.850+08:00  INFO 22432 --- [EducationCertificationSystem] [           main] o.s.a.r.c.CachingConnectionFactory       : Created new connection: rabbitConnectionFactory#b428830:0/SimpleConnection@5a4b8e25 [delegate=amqp://admin@127.0.0.1:5672/, localPort=64682]
+2026-07-22T09:56:29.944+08:00  INFO 22432 --- [EducationCertificationSystem] [           main] .EducationCertificationSystemApplication : Started EducationCertificationSystemApplication in 5.557 seconds (process running for 5.934)
+2026-07-22T13:56:07.597+08:00  INFO 22432 --- [EducationCertificationSystem] [nio-8081-exec-2] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-07-22T13:56:07.640+08:00  INFO 22432 --- [EducationCertificationSystem] [nio-8081-exec-2] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-07-22T13:56:07.841+08:00  INFO 22432 --- [EducationCertificationSystem] [nio-8081-exec-2] o.s.web.servlet.DispatcherServlet        : Completed initialization in 189 ms
+2026-07-22T16:50:09.901+08:00  INFO 22432 --- [EducationCertificationSystem] [ntContainer#0-1] c.e.mq.NoticeMessageListener             : 通知 5 消费成功，接收人数=1
